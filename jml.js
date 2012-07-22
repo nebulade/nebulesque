@@ -1,4 +1,16 @@
 
+function propertyNameToCSS (name) {
+	switch (name) {
+		case "id"	: return "id";
+		case "width"	: return "width";
+		case "height"	: return "height";
+		case "x"	: return "left";
+		case "y"	: return "top";
+		case "color"	: return "background-color";
+		default: return "";
+	}
+}
+
 function JMLParser () {
 	this._c = '';
 	this._exp = '';
@@ -19,6 +31,9 @@ JMLParser.prototype.parse = function (jml) {
 		// check for element name
 		if (this._c >= 'A' && this._c <= 'Z')
 			this._addToken("ELEMENT", this._parseElementName());
+		
+		if (this._c >= 'a' && this._c <= 'z')
+			this._addToken("PROPERTY", this._parseProperty());
 		
 		if (this._c >= '0' && this._c <= '9')
 			this._addToken("NUMBER", this._parseNumber());
@@ -59,6 +74,59 @@ JMLParser.prototype.parse = function (jml) {
 	
 }
 
+JMLParser.prototype.dumpTokens = function () {
+	for (i = 0; i < this._tokens.length; ++i)
+		console.log("TOKEN: " + this._tokens[i]["TOKEN"] + " " + (this._tokens[i]["DATA"] ? this._tokens[i]["DATA"] : ""));
+}
+
+JMLParser.prototype.compile = function (root) {
+	if (!root) {
+		console.log("Please specify a JML root element");
+		return;
+	}
+	
+	root.style.visibility = "hidden";
+	
+	var elem = undefined;
+	var parent = root;
+	var property = "";
+	
+	for (i = 0; i < this._tokens.length; ++i) {
+		var token = this._tokens[i];
+		
+		if (token["TOKEN"] == "ELEMENT") {
+			elem = document.createElement("div");
+			elem.style.position = "absolute";
+			elem.parent = parent;
+		}
+		
+		if (token["TOKEN"] == "SCOPE_START")
+			parent = elem;
+		
+		if (token["TOKEN"] == "SCOPE_END") {
+			parent = elem.parent;
+			parent.appendChild(elem);
+		}
+		
+		if (token["TOKEN"] == "PROPERTY")
+			property = propertyNameToCSS(token["DATA"]);
+		
+		if (token["TOKEN"] == "NUMBER" || token["TOKEN"] == "STRING") {
+			if (!property)
+				this._compileError("no property to assign value");
+			else {
+				if (property == "id") 
+					elem.id = token["DATA"];
+				else
+					elem.style[property] = token["DATA"];
+				property = undefined;
+			}
+		}
+	}
+	
+	root.style.visibility = "visible";
+}
+
 JMLParser.prototype._advance = function () {
 	this._c = this._exp[++this._i];
 }
@@ -71,9 +139,8 @@ JMLParser.prototype._error = function (message) {
 	console.log("Syntax error on line " + this._line + ": " + message);
 }
 
-JMLParser.prototype.dumpTokens = function () {
-	for (i = 0; i < this._tokens.length; ++i)
-		console.log("TOKEN: " + this._tokens[i]["TOKEN"] + " " + (this._tokens[i]["DATA"] ? this._tokens[i]["DATA"] : ""));
+JMLParser.prototype._compileError = function (message) {
+	console.log("Compile error: " + message);
 }
 
 JMLParser.prototype._parseElementName = function () {
@@ -81,6 +148,21 @@ JMLParser.prototype._parseElementName = function () {
 	
 	while (this._c) {
 		if ((this._c >= 'A' && this._c <= 'Z') || (this._c >= 'a' && this._c <= 'z'))
+			token += this._c;
+		else
+			break;
+		
+		this._advance();
+	}
+	
+	return token;
+}
+
+JMLParser.prototype._parseProperty = function () {
+	var token = "";
+	
+	while (this._c) {
+		if ((this._c >= 'A' && this._c <= 'Z') || (this._c >= 'a' && this._c <= 'z') || (this._c >= '0' && this._c <= '9'))
 			token += this._c;
 		else
 			break;
@@ -125,3 +207,4 @@ JMLParser.prototype._parseNumber = function () {
 	
 	return number;
 }
+
