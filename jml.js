@@ -24,8 +24,7 @@ JMLParser.prototype.parse = function (jml) {
 	this._i = 0;
 	this._line = 1;
 	this._tokens = [];
-	
-	this._advance();
+	this._c = this._exp[this._i];
 	
 	while (this._c) {
 		// check for element name

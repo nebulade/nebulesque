@@ -1,86 +1,117 @@
 <html>
-    <head>
-        <title> JS Fun </title>
+	<head>
+		<title> JS Fun </title>
 
-        <script type="text/javascript" src="fun.js"></script>
-        <script type="text/javascript" src="jml.js"></script>
+<!-- 		<script type="text/javascript" src="fun.js"></script> -->
+		<script type="text/javascript" src="jml.js"></script>
 
-        <script type="text/javascript">
+		<script type="text/javascript">
 
-            function run() {
-                var elem = new Element();
-                elem.setId("window");
-
-                elem.setXAnimation(new NumberAnimation(function() {}, 200, 400))
-                elem.setX(300);
-
-                var elem2 = new Element();
-                elem2.setId("window2");
-
-                var anim = new NumberAnimation(function(y) { elem2.elem.style.left = y; }, 0, 100);
-                anim.start();
-                
-                runJML();
-            }
-            
-            function runJML() {
-		var parser = new JMLParser();
+// 		function run() {
+// 			var elem = new Element();
+// 			elem.setId("window");
+// 
+// 			elem.setXAnimation(new NumberAnimation(function() {}, 200, 400))
+// 			elem.setX(300);
+// 
+// 			var elem2 = new Element();
+// 			elem2.setId("window2");
+// 
+// 			var anim = new NumberAnimation(function(y) { elem2.elem.style.left = y; }, 0, 100);
+// 			anim.start();
+// 		}
 		
-		var jmlElements = document.getElementsByTagName("jml"); 
-		
-		if (jmlElements.length == 0)  {
-			alert("could not find a jml tag");
-			return;
-		}
+		function runJML() {
+			var parser = new JMLParser();
 			
-		parser.parse(jmlElements[0].firstChild.data);
-		parser.dumpTokens();
-		parser.compile(document.getElementById("myjmlroot"))
-            }
-            
-            function changeJMLElement () {
-		var elem = document.getElementById("redRect");
-		elem.style.left = 500;
-            }
-            
-       </script>
+			var jmlElements = document.getElementsByTagName("jml"); 
+			
+			if (jmlElements.length == 0)  {
+				alert("could not find a jml tag");
+				return;
+			}
+				
+			parser.parse(jmlElements[0].firstChild.data);
+			parser.dumpTokens();
+			parser.compile(document.getElementById("myjmlroot"))
+		}
+		
+		function changeJMLElement () {
+			var elem = document.getElementById("redRect");
+			elem.style.left = 500;
+		}
+		
+		function compileTextArea() {
+			var root = document.getElementById("textareajmlroot");
+			var rootChildren = root.childNodes;
+			for (i = 0; i < rootChildren.length; ++i) {
+				root.removeChild(rootChildren[i]);
+			}
+		
+			var parser = new JMLParser();
+			
+			var jmlElement = document.getElementById("jml"); 
+			
+			parser.parse(jmlElement.value);
+			parser.dumpTokens();
+			parser.compile(document.getElementById("textareajmlroot"))
+		}
+		
+	</script>
 
-       
-    </head>
-
-    <body onload="JavaScript: run()">
-    
-       <jml style="visibility: hidden">
-
-	Rectangle {
-		id: "redRect";
-		width: 30;
-		height: 133;
-		color: "red";
-		x: 400;
-		y: 30
-	}
-       
-	Rectangle {
-		id: "blueRect";
-		width: 20;
-		height: 30;
-		color: "blue";
-	}
 	
-       </jml>
-       
-       <jmlobject id="myjmlroot">
-       </jmlobject>
-       
-        <div id="window" style="left: 200; top: 100; position: absolute; width: 100; height: 100;
-            background-color: #00ff00;">
-        </div>
-        
-        <div id="window2" style="left: 0; top: 0; position: absolute; width: 50; height: 50; background-color: #ff0000;">
-        </div>
-        
-        <a href="JavaScript: changeJMLElement();">JML</a>
-    </body>
+	</head>
+
+	<body onload="JavaScript: runJML()">
+	<a href="JavaScript: changeJMLElement();">Change attribute of redRect generated with jml from JS side</a>
+	
+	
+	<jml style="visibility: hidden">
+
+		Rectangle {
+			id: "redRect";
+			width: 30;
+			height: 133;
+			color: "red";
+			x: 400;
+			y: 30;
+		}
+	
+		Rectangle {
+			id: "blueRect";
+			width: 20;
+			height: 30;
+			color: "blue";
+			x: 600;
+			y: 100;
+		}
+		
+	</jml>
+	
+	<jmlobject id="myjmlroot">
+	</jmlobject>
+	
+	<textarea id="jml" rows=20 cols=80>
+Rectangle {
+	id: "greenRect";
+	width: 20;
+	height: 30;
+	color: "green";
+}
+	</textarea>
+	<a href="JavaScript: compileTextArea();">Compile</a>
+	
+	<jmlobject id="textareajmlroot">
+	</jmlobject>
+	
+<!--		<div id="window" style="left: 200; top: 100; position: absolute; width: 100; height: 100;
+		background-color: #00ff00;">
+		</div>
+		
+		<div id="window2" style="left: 0; top: 0; position: absolute; width: 50; height: 50; background-color: #ff0000;">
+		</div>-->
+		
+		
+	</body>
 </html>
 
