@@ -127,7 +127,8 @@ JMLParser.prototype.compile = function (root) {
 		}
 		
 		if (token["TOKEN"] == "PROPERTY")
-			property = propertyNameToCSS(token["DATA"]);
+			property = token["DATA"];
+// 			property = propertyNameToCSS(token["DATA"]);
 		
 		if (token["TOKEN"] == "EXPRESSION") {
 			if (!property)
@@ -145,10 +146,12 @@ JMLParser.prototype.compile = function (root) {
 						this._compileError("error evaluating expression: " + token["DATA"], token["LINE"]);
 					}
 					
-					if (property == "background-image")
-						elem.style[property] = "url(" + value + ")";
+					if (property == "source")
+						elem.style[propertyNameToCSS(property)] = "url(" + value + ")";
+					else if (property == "x" || property == "y" || property == "width" || property == "height")
+						elem[property] = value;
 					else
-						elem.style[property] = value;
+						elem.style[propertyNameToCSS(property)] = value;
 				}
 				property = undefined;
 			}

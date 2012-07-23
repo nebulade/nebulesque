@@ -92,6 +92,8 @@ Rectangle {
 	width: 20;
 	height: 30;
 	color: "green";
+	x: 0;
+	y: 400;
 }
 
 Image {
@@ -100,7 +102,7 @@ Image {
 	height: 64;
 	source: "icon" + ".png";
 	x: 800*1.2;
-	y: 100;
+	y: greenRect.y - 50;
 }
 	</textarea>
 	<a href="JavaScript: compileTextArea();">Compile</a>
