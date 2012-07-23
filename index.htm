@@ -43,10 +43,8 @@
 		
 		function compileTextArea() {
 			var root = document.getElementById("textareajmlroot");
-			var rootChildren = root.childNodes;
-			for (i = 0; i < rootChildren.length; ++i) {
-				root.removeChild(rootChildren[i]);
-			}
+			while (root.childNodes.length > 0) 
+				root.removeChild(root.lastChild);
 		
 			var parser = new JMLParser();
 			
