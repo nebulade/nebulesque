@@ -128,18 +128,18 @@ JMLParser.prototype.compile = function (root) {
 			if (!property)
 				this._compileError("no property to assign value");
 			else {
-				var value = "";
-				
-				try {
-					value = eval(token["DATA"]);
-				} catch (e) {
-					this._compileError("error evaluating expression: " + token["DATA"], token["LINE"]);
-				}
-				
-				console.log("value of expression: " + token["DATA"] + " is " + value);
+				// TODO make sure id is a proper one
 				if (property == "id") 
-					elem.id = value;
+					elem.id = token["DATA"];
 				else {
+					var value = "";
+					
+					try {
+						value = eval(token["DATA"]);
+					} catch (e) {
+						this._compileError("error evaluating expression: " + token["DATA"], token["LINE"]);
+					}
+					
 					if (property == "background-image")
 						elem.style[property] = "url(" + value + ")";
 					else
