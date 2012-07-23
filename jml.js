@@ -35,36 +35,43 @@ JMLParser.prototype.parse = function (jml) {
 		if (this._c >= 'a' && this._c <= 'z')
 			this._addToken("PROPERTY", this._parseProperty());
 		
-		if (this._c >= '0' && this._c <= '9')
-			this._addToken("NUMBER", this._parseNumber());
-		
 		if (this._c == '{')
 			this._addToken("SCOPE_START");
 		
 		if (this._c == '}')
 			this._addToken("SCOPE_END");
 		
-		if (this._c == ':')
+		if (this._c == ':') {
 			this._addToken("COLON");
-		
-		if (this._c == ';')
-			this._addToken("SEMICOLON");
-		
-		if (this._c == '+')
-			this._addToken("PLUS");
-		
-		if (this._c == '-')
-			this._addToken("MINUS");
-		
-		if (this._c == '"') {
-			var string = this._parseString();
-			
-			if (this._c == '"')
-				this._addToken("STRING", string);
-			else
-				this._error("Missing closing '\"'");
+			this._advance();
+			// we found a colon so everything until \n or ; is an expression
+			var expression = this._parseExpression();
+			console.log("EXP: " + expression);
+			this._addToken("EXPRESSION", expression);
 		}
 		
+		// not allowed here
+// 		if (this._c == '+')
+// 			this._addToken("PLUS");
+// 		
+// 		if (this._c == '-')
+// 			this._addToken("MINUS");
+// 		
+// 		if (this._c >= '0' && this._c <= '9')
+// 			this._addToken("NUMBER", this._parseNumber());
+// 		
+// 		if (this._c == '"') {
+// 			var string = this._parseString();
+// 			
+// 			if (this._c == '"')
+// 				this._addToken("STRING", string);
+// 			else
+// 				this._error("Missing closing '\"'");
+// 		}
+				
+		if (this._c == ';')
+			this._addToken("SEMICOLON");
+
 		if (this._c == '\n')
 			++this._line;
 	
@@ -117,17 +124,26 @@ JMLParser.prototype.compile = function (root) {
 		if (token["TOKEN"] == "PROPERTY")
 			property = propertyNameToCSS(token["DATA"]);
 		
-		if (token["TOKEN"] == "NUMBER" || token["TOKEN"] == "STRING") {
+		if (token["TOKEN"] == "EXPRESSION") {
 			if (!property)
 				this._compileError("no property to assign value");
 			else {
+				var value = "";
+				
+				try {
+					value = eval(token["DATA"]);
+				} catch (e) {
+					this._compileError("error evaluating expression: " + token["DATA"], token["LINE"]);
+				}
+				
+				console.log("value of expression: " + token["DATA"] + " is " + value);
 				if (property == "id") 
-					elem.id = token["DATA"];
+					elem.id = value;
 				else {
 					if (property == "background-image")
-						elem.style[property] = "url(" + token["DATA"] + ")";
+						elem.style[property] = "url(" + value + ")";
 					else
-						elem.style[property] = token["DATA"];
+						elem.style[property] = value;
 				}
 				property = undefined;
 			}
@@ -142,15 +158,15 @@ JMLParser.prototype._advance = function () {
 }
 
 JMLParser.prototype._addToken = function (type, data) {
-	this._tokens.push( {"TOKEN" : type, "DATA" : data} );
+	this._tokens.push( {"TOKEN" : type, "DATA" : data, "LINE" : this._line} );
 }
 
 JMLParser.prototype._error = function (message) {
 	console.log("Syntax error on line " + this._line + ": " + message);
 }
 
-JMLParser.prototype._compileError = function (message) {
-	console.log("Compile error: " + message);
+JMLParser.prototype._compileError = function (message, l) {
+	console.log("Compile error on line " + l + ": " + message);
 }
 
 JMLParser.prototype._parseElementName = function () {
@@ -218,3 +234,19 @@ JMLParser.prototype._parseNumber = function () {
 	return number;
 }
 
+JMLParser.prototype._parseExpression = function () {
+	var expression = "";
+	
+	while (this._c) {
+		if (this._c == '\n' || this._c == ';')
+			break;
+		
+		// ignore whitespace
+		if (this._c != '\t' && this._c != ' ')
+			expression += this._c;
+		
+		this._advance();
+	}
+	
+	return expression;
+}
