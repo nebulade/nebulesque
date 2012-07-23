@@ -7,6 +7,7 @@ function propertyNameToCSS (name) {
 		case "x"	: return "left";
 		case "y"	: return "top";
 		case "color"	: return "background-color";
+		case "source"	: return "background-image";
 		default: return "";
 	}
 }
@@ -97,6 +98,12 @@ JMLParser.prototype.compile = function (root) {
 			elem = document.createElement("div");
 			elem.style.position = "absolute";
 			elem.parent = parent;
+			elem.type = token["DATA"];
+			
+// 			if (elem.type == "Image") {
+// 				var img = document.createElement("img");
+// 				elem.appendChild(img);
+// 			}
 		}
 		
 		if (token["TOKEN"] == "SCOPE_START")
@@ -116,8 +123,12 @@ JMLParser.prototype.compile = function (root) {
 			else {
 				if (property == "id") 
 					elem.id = token["DATA"];
-				else
-					elem.style[property] = token["DATA"];
+				else {
+					if (property == "background-image")
+						elem.style[property] = "url(" + token["DATA"] + ")";
+					else
+						elem.style[property] = token["DATA"];
+				}
 				property = undefined;
 			}
 		}
