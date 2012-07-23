@@ -21,6 +21,7 @@
 // 			anim.start();
 // 		}
 		
+
 		function runJML() {
 			var parser = new JMLParser();
 			
@@ -39,6 +40,11 @@
 		function changeJMLElement () {
 			var elem = document.getElementById("redRect");
 			elem.style.left = 500;
+
+                        var elem2 = document.getElementById("myImage");
+                        alert(elem2.x)
+			elem2.x = 1337;
+			alert(elem2.x)
 		}
 		
 		function compileTextArea() {
@@ -54,6 +60,7 @@
 			parser.dumpTokens();
 			parser.compile(document.getElementById("textareajmlroot"))
 		}
+
 		
 	</script>
 
@@ -67,7 +74,7 @@
 	<jml style="visibility: hidden">
 
 		Rectangle {
-			id: "redRect";
+			id: redRect;
 			width: 30;
 			height: 133;
 			color: "red";

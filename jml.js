@@ -106,6 +106,11 @@ JMLParser.prototype.compile = function (root) {
 			elem.style.position = "absolute";
 			elem.parent = parent;
 			elem.type = token["DATA"];
+                        
+			this._addProperty(elem, "x", 0);
+			this._addProperty(elem, "y", 0);
+			this._addProperty(elem, "width", 0);
+			this._addProperty(elem, "height", 0);
 			
 // 			if (elem.type == "Image") {
 // 				var img = document.createElement("img");
@@ -151,6 +156,15 @@ JMLParser.prototype.compile = function (root) {
 	}
 	
 	root.style.visibility = "visible";
+}
+
+JMLParser.prototype._addProperty = function (elem, property, value) {
+	// TODO scope of tmp???
+	var tmp = value;
+	Object.defineProperty(elem, property, {
+		get: function() { return tmp; },
+		set: function(val) { tmp = val; this.style[propertyNameToCSS(property)] = tmp; }
+	});
 }
 
 JMLParser.prototype._advance = function () {
