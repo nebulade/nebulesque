@@ -1,4 +1,7 @@
 
+/* 
+ * Convert JML property names to css names
+ */
 function propertyNameToCSS (name) 
 {
 	switch (name) {
@@ -14,6 +17,9 @@ function propertyNameToCSS (name)
 	}
 }
 
+/* 
+ * JMLParser constructor
+ */
 function JMLParser () 
 {
 	this._c = '';
@@ -25,6 +31,9 @@ function JMLParser ()
 	this._bindings = [];
 }
 
+/* 
+ * Parse the input string and create tokens
+ */
 JMLParser.prototype.parse = function (jml) 
 {
 	this._exp = jml;
@@ -67,13 +76,19 @@ JMLParser.prototype.parse = function (jml)
 	
 }
 
+/* 
+ * Print all found tokens on the console 
+ */
 JMLParser.prototype.dumpTokens = function () 
 {
 	for (i = 0; i < this._tokens.length; ++i)
 		console.log("TOKEN: " + this._tokens[i]["TOKEN"] + " " + (this._tokens[i]["DATA"] ? this._tokens[i]["DATA"] : ""));
 }
 
-// TODO cannot handle nested elements...very easy to add I just didn't bother
+/* 
+ * Take all tokens and compile it to real elements with properties and bindings
+ *  TODO cannot handle nested elements...very easy to add I just didn't bother
+ */
 JMLParser.prototype.compile = function (root) {
 	if (!root) {
 		console.log("Please specify a JML root element");
@@ -144,6 +159,9 @@ JMLParser.prototype.compile = function (root) {
 	root.style.visibility = "visible";
 }
 
+/* 
+ * Adds a JML property with custom setter/getter to intercept access
+ */
 JMLParser.prototype._addProperty = function (elem, property, initialValue) 
 {
 	var tmp = initialValue;
@@ -173,11 +191,17 @@ JMLParser.prototype._addProperty = function (elem, property, initialValue)
 	});
 }
 
+/* 
+ * Tokenizer: Convenience function to advance the current tokenizer character
+ */
 JMLParser.prototype._tokenizerAdvance = function () 
 {
 	this._c = this._exp[++this._i];
 }
 
+/* 
+ * Slot to handle a property change and evaluate the associated bindings
+ */
 JMLParser.prototype._notifyPropertyChange = function (binding_id) 
 {
 	console.log("notification for binding " + binding_id);
@@ -192,27 +216,42 @@ JMLParser.prototype._notifyPropertyChange = function (binding_id)
 	eval(this._bindings[binding_id]);
 }
 
+/* 
+ * Tokenizer: add a found token to the token table
+ */
 JMLParser.prototype._addToken = function (type, data) 
 {
 	this._tokens.push( {"TOKEN" : type, "DATA" : data, "LINE" : this._line} );
 }
 
+/* 
+ * Tokenizer: check if character is actual an alphanumeric one
+ */
 JMLParser.prototype._checkAlphaNumberic = function (c)
 {
 	return ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'));
 }
 
-JMLParser.prototype._error = function (message) 
+/* 
+ * print syntax error
+ */
+JMLParser.prototype._syntaxError = function (message) 
 {
 	console.log("Syntax error on line " + this._line + ": " + message);
 }
 
+/* 
+ * print compile error
+ */
 JMLParser.prototype._compileError = function (message, l) 
 {
 	console.log("Compile error on line " + l + ": " + message);
 }
 
-// This currently only handles single bindings without complex expressions
+/* 
+ * Find a binding in a expression token 
+ *  TODO: This currently only handles single bindings without complex expressions
+ */
 JMLParser.prototype._findAndAddBinding = function (expr, elemId, property) 
 {
 	if (expr.length == 0)
@@ -252,6 +291,9 @@ JMLParser.prototype._findAndAddBinding = function (expr, elemId, property)
 	return true;
 }
 
+/* 
+ * Tokenizer: extract an element name
+ */
 JMLParser.prototype._parseElementName = function () 
 {
 	var token = "";
@@ -268,6 +310,9 @@ JMLParser.prototype._parseElementName = function ()
 	return token;
 }
 
+/* 
+ * Tokenizer: extract a property name
+ */
 JMLParser.prototype._parseProperty = function () 
 {
 	var token = "";
@@ -284,6 +329,10 @@ JMLParser.prototype._parseProperty = function ()
 	return token;
 }
 
+/* 
+ * Tokenizer: extract a string based on double quotes
+ *  TODO: handle single quotes?
+ */
 JMLParser.prototype._parseString = function () 
 {
 	var token = "";
@@ -303,6 +352,10 @@ JMLParser.prototype._parseString = function ()
 	return token;
 }
 
+/* 
+ * Tokenizer: extract a Number
+ *  TODO: handle doubles, negative and such
+ */
 JMLParser.prototype._parseNumber = function () 
 {
 	var number = 0;
@@ -321,6 +374,9 @@ JMLParser.prototype._parseNumber = function ()
 	return number;
 }
 
+/* 
+ * Tokenizer: extract an right side expression, called after COLON token found
+ */
 JMLParser.prototype._parseExpression = function () 
 {
 	var expression = "";
