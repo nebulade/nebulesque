@@ -2,12 +2,12 @@
 	<head>
 		<title> JS Fun </title>
 
-<!-- 		<script type="text/javascript" src="fun.js"></script> -->
+		<script type="text/javascript" src="fun.js"></script>
 		<script type="text/javascript" src="jml.js"></script>
 
 		<script type="text/javascript">
 
-// 		function run() {
+		function run() {
 // 			var elem = new Element();
 // 			elem.setId("window");
 // 
@@ -16,10 +16,10 @@
 // 
 // 			var elem2 = new Element();
 // 			elem2.setId("window2");
-// 
-// 			var anim = new NumberAnimation(function(y) { elem2.elem.style.left = y; }, 0, 100);
-// 			anim.start();
-// 		}
+
+			var anim = new NumberAnimation(function(x) { myImage.x = x; }, 0, 1000, 4000);
+			anim.start();
+		}
 		
 
 // 		function runJML() {
@@ -60,7 +60,7 @@
 	</script>
 
 	</head>
-	<body>
+	<body >
 	
 	
 	<textarea id="jml" rows=20 cols=80>
@@ -81,10 +81,20 @@ Image {
 	x: 800*1.2;
 	y: greenRect.y - 50;
 }
+
+Image {
+	id: myImage2;
+	width: 64;
+	height: 64;
+	source: "icon" + ".png";
+	x: myImage.x * 1.3;
+	y: myImage.y + 100;
+}
 	</textarea>
 	<br/>
 	<a href="JavaScript: compileTextArea();">Compile</a><br/>
 	<input type="text" id="myValue" value="100"/><a href="JavaScript: changeJMLElement();">Change y of greenRect</a><br/>
+	<a href="JavaScript: run();">start Animation</a><br/>
 	
 	<jmlobject id="textareajmlroot">
 	</jmlobject>
@@ -111,6 +121,7 @@ Image {
 	
 	<jmlobject id="myjmlroot">
 	</jmlobject>-->
+
 		
 	</body>
 </html>

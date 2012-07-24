@@ -177,8 +177,6 @@ JMLParser.prototype._addProperty = function (elem, property, initialValue)
 			if (tmp == val)
 				return;
 			
-			console.log("setter for property " + property + " value " + val);
-			
 			tmp = val;
 			// TODO find a better way
 			if (property == "source")
@@ -205,15 +203,15 @@ JMLParser.prototype._tokenizerAdvance = function ()
  */
 JMLParser.prototype._notifyPropertyChange = function (binding_id) 
 {
-	console.log("notification for binding " + binding_id);
+// 	console.log("notification for binding " + binding_id);
 	
 	if (this._bindings[binding_id] == undefined)
 		return;
 
 // 	for (var i = 0; i < this._bindings[binding_id].length; ++i)
 
-	console.log("new value of bound property: " + eval(binding_id));
-	console.log("eval expr: |" + this._bindings[binding_id] + "|");
+// 	console.log("new value of bound property: " + eval(binding_id));
+// 	console.log("eval expr: |" + this._bindings[binding_id] + "|");
 	
 	var foo = this._bindings[binding_id] + ";";
 	eval(foo);
