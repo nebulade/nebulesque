@@ -50,7 +50,7 @@ JMLParser.prototype.parse = function (jml)
 		
 		if (this._c == ':') {
 			this._addToken("COLON");
-			this._advance();
+			this._tokenizerAdvance();
 			// we found a colon so everything until \n or ; is an expression
 			this._addToken("EXPRESSION", this._parseExpression());
 		}
@@ -80,7 +80,7 @@ JMLParser.prototype.parse = function (jml)
 		if (this._c == '\n')
 			++this._line;
 	
-		this._advance();
+		this._tokenizerAdvance();
 	}
 	
 	
@@ -192,7 +192,7 @@ JMLParser.prototype._addProperty = function (elem, property, initialValue)
 	});
 }
 
-JMLParser.prototype._advance = function () 
+JMLParser.prototype._tokenizerAdvance = function () 
 {
 	this._c = this._exp[++this._i];
 }
@@ -281,7 +281,7 @@ JMLParser.prototype._parseElementName = function ()
 		else
 			break;
 		
-		this._advance();
+		this._tokenizerAdvance();
 	}
 	
 	return token;
@@ -297,7 +297,7 @@ JMLParser.prototype._parseProperty = function ()
 		else
 			break;
 		
-		this._advance();
+		this._tokenizerAdvance();
 	}
 	
 	return token;
@@ -308,7 +308,7 @@ JMLParser.prototype._parseString = function ()
 	var token = "";
 	
 	if (this._c == '"')
-		this._advance();
+		this._tokenizerAdvance();
 	
 	while (this._c) {
 		if (this._c != '"' && this._c != '\n')
@@ -316,7 +316,7 @@ JMLParser.prototype._parseString = function ()
 		else
 			break;
 		
-		this._advance();
+		this._tokenizerAdvance();
 	}
 	
 	return token;
@@ -334,7 +334,7 @@ JMLParser.prototype._parseNumber = function ()
 			break;
 		}
 		
-		this._advance();
+		this._tokenizerAdvance();
 	}
 	
 	return number;
@@ -352,7 +352,7 @@ JMLParser.prototype._parseExpression = function ()
 		if (this._c != '\t' && this._c != ' ')
 			expression += this._c;
 		
-		this._advance();
+		this._tokenizerAdvance();
 	}
 	
 	return expression;
