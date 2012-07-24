@@ -20,7 +20,7 @@ function JMLParser ()
 	this._i = 0;
 	this._line = 1;
 	this._tokens = [];
-	// bindings table ["binding id" -> objectID:: ... ::objectID::property][expression]
+	// bindings table ["binding id" -> objectID.objectID.property][expression]
 	this._bindings = [];
 }
 
@@ -162,10 +162,15 @@ JMLParser.prototype.compile = function (root) {
 	root.style.visibility = "visible";
 }
 
-JMLParser.prototype._addProperty = function (elem, property, value) 
+JMLParser.prototype._addProperty = function (elem, property, initialValue) 
 {
-	var tmp = value;
+	var tmp = initialValue;
 	var parser = this;
+	
+	// set initial value, ignore the source exception for now
+	// maybe replaced by a "internal_setter", that does not perform the tmp == val check
+	elem.style[propertyNameToCSS(property)] = tmp;
+	
 	Object.defineProperty(elem, property, {
 		get: function() { return tmp; },
 		set: function(val) {
@@ -179,7 +184,7 @@ JMLParser.prototype._addProperty = function (elem, property, value)
 			else
 				this.style[propertyNameToCSS(property)] = tmp;
 			
-			parser._notifyPropertyChange(this.id + "::" + property);
+			parser._notifyPropertyChange(this.id + "." + property);
 		}
 	});
 }
@@ -192,6 +197,16 @@ JMLParser.prototype._advance = function ()
 JMLParser.prototype._notifyPropertyChange = function (binding_id) 
 {
 	console.log("notification for binding " + binding_id);
+	
+	if (this._bindings[binding_id] == undefined)
+		return;
+	
+	console.log(this._bindings[binding_id]);
+	
+// 	for (var i = 0; i < this._bindings[binding_id].length; ++i)
+	var expression = binding_id + " = " + this._bindings[binding_id] + ";";
+	console.log("Expr: " + expression);
+	eval(expression);
 }
 
 JMLParser.prototype._addToken = function (type, data) 

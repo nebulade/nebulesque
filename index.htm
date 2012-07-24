@@ -38,8 +38,8 @@
 // 		}
 		
 		function changeJMLElement () {
-			var elem = document.getElementById("myImage");
-			elem.x = 500;
+			var elem = document.getElementById("greenRect");
+			elem.y = 100;
 		}
 		
 		function compileTextArea() {
@@ -59,12 +59,43 @@
 		
 	</script>
 
-	
 	</head>
-
 	<body>
-	<a href="JavaScript: changeJMLElement();">Change attribute of redRect generated with jml from JS side</a>
 	
+	
+	<textarea id="jml" rows=20 cols=80>
+Rectangle {
+	id: greenRect;
+	width: 20;
+	height: 30;
+	color: "green";
+	x: 0;
+	y: 50;
+}
+
+Image {
+	id: myImage;
+	width: 64;
+	height: 64;
+	source: "icon" + ".png";
+	x: 800*1.2;
+	y: greenRect.y - 50;
+}
+	</textarea>
+	<br/>
+	<a href="JavaScript: compileTextArea();">Compile</a><br/>
+	<a href="JavaScript: changeJMLElement();">Change y of greenRect to 100</a><br/>
+	
+	<jmlobject id="textareajmlroot">
+	</jmlobject>
+	
+<!--		<div id="window" style="left: 200; top: 100; position: absolute; width: 100; height: 100;
+		background-color: #00ff00;">
+		</div>
+		
+		<div id="window2" style="left: 0; top: 0; position: absolute; width: 50; height: 50; background-color: #ff0000;">
+		</div>-->
+		
 	
 <!--	<jml style="visibility: hidden">
 
@@ -80,38 +111,6 @@
 	
 	<jmlobject id="myjmlroot">
 	</jmlobject>-->
-	
-	<textarea id="jml" rows=20 cols=80>
-Rectangle {
-	id: greenRect;
-	width: 20;
-	height: 30;
-	color: "green";
-	x: 0;
-	y: 400;
-}
-
-Image {
-	id: myImage;
-	width: 64;
-	height: 64;
-	source: "icon" + ".png";
-	x: 800*1.2;
-	y: greenRect.y - 50;
-}
-	</textarea>
-	<a href="JavaScript: compileTextArea();">Compile</a>
-	
-	<jmlobject id="textareajmlroot">
-	</jmlobject>
-	
-<!--		<div id="window" style="left: 200; top: 100; position: absolute; width: 100; height: 100;
-		background-color: #00ff00;">
-		</div>
-		
-		<div id="window2" style="left: 0; top: 0; position: absolute; width: 50; height: 50; background-color: #ff0000;">
-		</div>-->
-		
 		
 	</body>
 </html>
