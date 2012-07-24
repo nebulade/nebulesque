@@ -48,9 +48,7 @@ JMLParser.prototype.parse = function (jml)
 			this._addToken("COLON");
 			this._advance();
 			// we found a colon so everything until \n or ; is an expression
-			var expression = this._parseExpression();
-			console.log("EXP: " + expression);
-			this._addToken("EXPRESSION", expression);
+			this._addToken("EXPRESSION", this._parseExpression());
 		}
 		
 		// not allowed here

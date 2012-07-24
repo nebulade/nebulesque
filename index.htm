@@ -33,18 +33,13 @@
 			}
 				
 			parser.parse(jmlElements[0].firstChild.data);
-			parser.dumpTokens();
+// 			parser.dumpTokens();
 			parser.compile(document.getElementById("myjmlroot"))
 		}
 		
 		function changeJMLElement () {
 			var elem = document.getElementById("redRect");
 			elem.style.left = 500;
-
-                        var elem2 = document.getElementById("myImage");
-                        alert(elem2.x)
-			elem2.x = 1337;
-			alert(elem2.x)
 		}
 		
 		function compileTextArea() {
@@ -57,7 +52,7 @@
 			var jmlElement = document.getElementById("jml"); 
 			
 			parser.parse(jmlElement.value);
-			parser.dumpTokens();
+// 			parser.dumpTokens();
 			parser.compile(document.getElementById("textareajmlroot"))
 		}
 
@@ -75,8 +70,8 @@
 
 		Rectangle {
 			id: redRect;
-			width: 30;
-			height: 133;
+			width: 10;
+			height: 10;
 			color: "red";
 			x: 400;
 			y: 30;
