@@ -1,5 +1,6 @@
 
-function propertyNameToCSS (name) {
+function propertyNameToCSS (name) 
+{
 	switch (name) {
 		case "id"	: return "id";
 		case "width"	: return "width";
@@ -12,7 +13,8 @@ function propertyNameToCSS (name) {
 	}
 }
 
-function JMLParser () {
+function JMLParser () 
+{
 	this._c = '';
 	this._exp = '';
 	this._i = 0;
@@ -20,7 +22,8 @@ function JMLParser () {
 	this._tokens = [];
 }
 
-JMLParser.prototype.parse = function (jml) {
+JMLParser.prototype.parse = function (jml) 
+{
 	this._exp = jml;
 	this._i = 0;
 	this._line = 1;
@@ -81,7 +84,8 @@ JMLParser.prototype.parse = function (jml) {
 	
 }
 
-JMLParser.prototype.dumpTokens = function () {
+JMLParser.prototype.dumpTokens = function () 
+{
 	for (i = 0; i < this._tokens.length; ++i)
 		console.log("TOKEN: " + this._tokens[i]["TOKEN"] + " " + (this._tokens[i]["DATA"] ? this._tokens[i]["DATA"] : ""));
 }
@@ -137,6 +141,10 @@ JMLParser.prototype.compile = function (root) {
 				else {
 					var value = "";
 					
+					// TODO only if we dont find a binding, we need to eval the expression here
+					//      otherwise we evaluate it at the end of the compilation
+					this._findAndAddBinding(elem, token["DATA"]);
+					
 					try {
 						value = eval(token["DATA"]);
 					} catch (e) {
@@ -153,7 +161,8 @@ JMLParser.prototype.compile = function (root) {
 	root.style.visibility = "visible";
 }
 
-JMLParser.prototype._addProperty = function (elem, property, value) {
+JMLParser.prototype._addProperty = function (elem, property, value) 
+{
 	var tmp = value;
 	Object.defineProperty(elem, property, {
 		get: function() { return tmp; },
@@ -168,23 +177,43 @@ JMLParser.prototype._addProperty = function (elem, property, value) {
 	});
 }
 
-JMLParser.prototype._advance = function () {
+JMLParser.prototype._advance = function () 
+{
 	this._c = this._exp[++this._i];
 }
 
-JMLParser.prototype._addToken = function (type, data) {
+JMLParser.prototype._addToken = function (type, data) 
+{
 	this._tokens.push( {"TOKEN" : type, "DATA" : data, "LINE" : this._line} );
 }
 
-JMLParser.prototype._error = function (message) {
+JMLParser.prototype._error = function (message) 
+{
 	console.log("Syntax error on line " + this._line + ": " + message);
 }
 
-JMLParser.prototype._compileError = function (message, l) {
+JMLParser.prototype._compileError = function (message, l) 
+{
 	console.log("Compile error on line " + l + ": " + message);
 }
 
-JMLParser.prototype._parseElementName = function () {
+// This currently only handles single bindings without complex expressions
+JMLParser.prototype._findAndAddBinding = function (elem, expression) 
+{
+	if (expression.length == 0)
+		return false;
+	
+	var start = expression[0];
+	if (start == '"' || (start >= '0' && start <= '9'))
+		return false;
+	
+	// TODO found a binding...add it
+	
+	return true;
+}
+
+JMLParser.prototype._parseElementName = function () 
+{
 	var token = "";
 	
 	while (this._c) {
@@ -199,7 +228,8 @@ JMLParser.prototype._parseElementName = function () {
 	return token;
 }
 
-JMLParser.prototype._parseProperty = function () {
+JMLParser.prototype._parseProperty = function () 
+{
 	var token = "";
 	
 	while (this._c) {
@@ -214,7 +244,8 @@ JMLParser.prototype._parseProperty = function () {
 	return token;
 }
 
-JMLParser.prototype._parseString = function () {
+JMLParser.prototype._parseString = function () 
+{
 	var token = "";
 	
 	if (this._c == '"')
@@ -232,7 +263,8 @@ JMLParser.prototype._parseString = function () {
 	return token;
 }
 
-JMLParser.prototype._parseNumber = function () {
+JMLParser.prototype._parseNumber = function () 
+{
 	var number = 0;
 	
 	while (this._c) {
@@ -249,7 +281,8 @@ JMLParser.prototype._parseNumber = function () {
 	return number;
 }
 
-JMLParser.prototype._parseExpression = function () {
+JMLParser.prototype._parseExpression = function () 
+{
 	var expression = "";
 	
 	while (this._c) {
