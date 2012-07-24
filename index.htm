@@ -39,7 +39,7 @@
 		
 		function changeJMLElement () {
 			var elem = document.getElementById("greenRect");
-			elem.y = 100;
+			elem.y = document.getElementById("myValue").value;
 		}
 		
 		function compileTextArea() {
@@ -84,7 +84,7 @@ Image {
 	</textarea>
 	<br/>
 	<a href="JavaScript: compileTextArea();">Compile</a><br/>
-	<a href="JavaScript: changeJMLElement();">Change y of greenRect to 100</a><br/>
+	<input type="text" id="myValue" value="100"/><a href="JavaScript: changeJMLElement();">Change y of greenRect</a><br/>
 	
 	<jmlobject id="textareajmlroot">
 	</jmlobject>

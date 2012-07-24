@@ -201,6 +201,7 @@ JMLParser.prototype._tokenizerAdvance = function ()
 
 /* 
  * Slot to handle a property change and evaluate the associated bindings
+ *  TODO: there might be multiple bindings to the property
  */
 JMLParser.prototype._notifyPropertyChange = function (binding_id) 
 {
@@ -208,12 +209,14 @@ JMLParser.prototype._notifyPropertyChange = function (binding_id)
 	
 	if (this._bindings[binding_id] == undefined)
 		return;
-	
+
 // 	for (var i = 0; i < this._bindings[binding_id].length; ++i)
-		
-	console.log("eval expr: " + this._bindings[binding_id]);
+
 	console.log("new value of bound property: " + eval(binding_id));
-	eval(this._bindings[binding_id]);
+	console.log("eval expr: |" + this._bindings[binding_id] + "|");
+	
+	var foo = this._bindings[binding_id] + ";";
+	eval(foo);
 }
 
 /* 
