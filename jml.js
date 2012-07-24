@@ -9,6 +9,7 @@ function propertyNameToCSS (name)
 		case "y"	: return "top";
 		case "color"	: return "background-color";
 		case "source"	: return "background-image";
+		case "position" : return "position";
 		default: return "";
 	}
 }
@@ -109,7 +110,6 @@ JMLParser.prototype.compile = function (root) {
 		
 		if (token["TOKEN"] == "ELEMENT") {
 			elem = document.createElement("div");
-			elem.style.position = "absolute";
 			elem.parent = parent;
 			elem.type = token["DATA"];
                         
@@ -119,6 +119,7 @@ JMLParser.prototype.compile = function (root) {
 			this._addProperty(elem, "height", 0);
 			this._addProperty(elem, "color", "");
 			this._addProperty(elem, "source", "");
+			this._addProperty(elem, "position", "absolute");
 		}
 		
 		if (token["TOKEN"] == "SCOPE_START")
