@@ -145,7 +145,7 @@ JMLParser.prototype.compile = function (root) {
 					
 					// TODO only if we dont find a binding, we need to eval the expression here
 					//      otherwise we evaluate it at the end of the compilation
-					this._findAndAddBinding(token["DATA"]);
+					this._findAndAddBinding(token["DATA"], elem.id, property);
 					
 					try {
 						value = eval(token["DATA"]);
@@ -178,6 +178,8 @@ JMLParser.prototype._addProperty = function (elem, property, initialValue)
 			if (tmp == val)
 				return;
 			
+			console.log("setter for property " + property + " value " + val);
+			
 			tmp = val;
 			// TODO find a better way
 			if (property == "source")
@@ -202,12 +204,11 @@ JMLParser.prototype._notifyPropertyChange = function (binding_id)
 	if (this._bindings[binding_id] == undefined)
 		return;
 	
-	console.log(this._bindings[binding_id]);
-	
 // 	for (var i = 0; i < this._bindings[binding_id].length; ++i)
-	var expression = binding_id + " = " + this._bindings[binding_id] + ";";
-	console.log("Expr: " + expression);
-	eval(expression);
+		
+	console.log("eval expr: " + this._bindings[binding_id]);
+	console.log("new value of bound property: " + eval(binding_id));
+	eval(this._bindings[binding_id]);
 }
 
 JMLParser.prototype._addToken = function (type, data) 
@@ -231,7 +232,7 @@ JMLParser.prototype._compileError = function (message, l)
 }
 
 // This currently only handles single bindings without complex expressions
-JMLParser.prototype._findAndAddBinding = function (expr) 
+JMLParser.prototype._findAndAddBinding = function (expr, elemId, property) 
 {
 	if (expr.length == 0)
 		return false;
@@ -256,13 +257,16 @@ JMLParser.prototype._findAndAddBinding = function (expr)
 	// builds up an id for the binding table
 	var binding_id = "";
 	for (i = 0; i < elems.length; ++i)
-		binding_id += elems[i] + "::";
+		binding_id += elems[i] + ".";
 	binding_id += tmpProperty;
 	
 	if (!this._bindings[binding_id])
 		this._bindings[binding_id] = [];
 	
-	this._bindings[binding_id][this._bindings[binding_id].length] = expr;
+	var final_expr = elemId + "." + property + "=" + expr;
+	
+	this._bindings[binding_id][this._bindings[binding_id].length] = final_expr;
+	console.log("Add binding: " + binding_id + " with expression " + final_expr);
 	
 	return true;
 }
