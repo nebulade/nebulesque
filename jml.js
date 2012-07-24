@@ -86,6 +86,7 @@ JMLParser.prototype.dumpTokens = function () {
 		console.log("TOKEN: " + this._tokens[i]["TOKEN"] + " " + (this._tokens[i]["DATA"] ? this._tokens[i]["DATA"] : ""));
 }
 
+// TODO cannot handle nested elements...very easy to add I just didn't bother
 JMLParser.prototype.compile = function (root) {
 	if (!root) {
 		console.log("Please specify a JML root element");
@@ -111,11 +112,8 @@ JMLParser.prototype.compile = function (root) {
 			this._addProperty(elem, "y", 0);
 			this._addProperty(elem, "width", 0);
 			this._addProperty(elem, "height", 0);
-			
-// 			if (elem.type == "Image") {
-// 				var img = document.createElement("img");
-// 				elem.appendChild(img);
-// 			}
+			this._addProperty(elem, "color", "");
+			this._addProperty(elem, "source", "");
 		}
 		
 		if (token["TOKEN"] == "SCOPE_START")
@@ -128,7 +126,6 @@ JMLParser.prototype.compile = function (root) {
 		
 		if (token["TOKEN"] == "PROPERTY")
 			property = token["DATA"];
-// 			property = propertyNameToCSS(token["DATA"]);
 		
 		if (token["TOKEN"] == "EXPRESSION") {
 			if (!property)
@@ -146,12 +143,7 @@ JMLParser.prototype.compile = function (root) {
 						this._compileError("error evaluating expression: " + token["DATA"], token["LINE"]);
 					}
 					
-					if (property == "source")
-						elem.style[propertyNameToCSS(property)] = "url(" + value + ")";
-					else if (property == "x" || property == "y" || property == "width" || property == "height")
-						elem[property] = value;
-					else
-						elem.style[propertyNameToCSS(property)] = value;
+					elem[property] = value;
 				}
 				property = undefined;
 			}
@@ -162,11 +154,17 @@ JMLParser.prototype.compile = function (root) {
 }
 
 JMLParser.prototype._addProperty = function (elem, property, value) {
-	// TODO scope of tmp???
 	var tmp = value;
 	Object.defineProperty(elem, property, {
 		get: function() { return tmp; },
-		set: function(val) { tmp = val; this.style[propertyNameToCSS(property)] = tmp; }
+		set: function(val) {
+			tmp = val;
+			// TODO find a better way
+			if (property == "source")
+				this.style[propertyNameToCSS(property)] = "url(" + tmp + ")";
+			else
+				this.style[propertyNameToCSS(property)] = tmp;
+		}
 	});
 }
 
