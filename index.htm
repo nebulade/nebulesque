@@ -22,24 +22,24 @@
 // 		}
 		
 
-		function runJML() {
-			var parser = new JMLParser();
-			
-			var jmlElements = document.getElementsByTagName("jml"); 
-			
-			if (jmlElements.length == 0)  {
-				alert("could not find a jml tag");
-				return;
-			}
-				
-			parser.parse(jmlElements[0].firstChild.data);
+// 		function runJML() {
+// 			var parser = new JMLParser();
+// 			
+// 			var jmlElements = document.getElementsByTagName("jml"); 
+// 			
+// 			if (jmlElements.length == 0)  {
+// 				alert("could not find a jml tag");
+// 				return;
+// 			}
+// 				
+// 			parser.parse(jmlElements[0].firstChild.data);
 // 			parser.dumpTokens();
-			parser.compile(document.getElementById("myjmlroot"))
-		}
+// 			parser.compile(document.getElementById("myjmlroot"))
+// 		}
 		
 		function changeJMLElement () {
-			var elem = document.getElementById("redRect");
-			elem.style.left = 500;
+			var elem = document.getElementById("myImage");
+			elem.x = 500;
 		}
 		
 		function compileTextArea() {
@@ -62,11 +62,11 @@
 	
 	</head>
 
-	<body onload="JavaScript: runJML()">
+	<body>
 	<a href="JavaScript: changeJMLElement();">Change attribute of redRect generated with jml from JS side</a>
 	
 	
-	<jml style="visibility: hidden">
+<!--	<jml style="visibility: hidden">
 
 		Rectangle {
 			id: redRect;
@@ -79,7 +79,7 @@
 	</jml>
 	
 	<jmlobject id="myjmlroot">
-	</jmlobject>
+	</jmlobject>-->
 	
 	<textarea id="jml" rows=20 cols=80>
 Rectangle {

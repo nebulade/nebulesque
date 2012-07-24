@@ -20,6 +20,8 @@ function JMLParser ()
 	this._i = 0;
 	this._line = 1;
 	this._tokens = [];
+	// bindings table ["binding id" -> objectID:: ... ::objectID::property][expression]
+	this._bindings = [];
 }
 
 JMLParser.prototype.parse = function (jml) 
@@ -29,6 +31,7 @@ JMLParser.prototype.parse = function (jml)
 	this._line = 1;
 	this._tokens = [];
 	this._c = this._exp[this._i];
+	this._bindings = [];
 	
 	while (this._c) {
 		// check for element name
@@ -141,7 +144,7 @@ JMLParser.prototype.compile = function (root) {
 					
 					// TODO only if we dont find a binding, we need to eval the expression here
 					//      otherwise we evaluate it at the end of the compilation
-					this._findAndAddBinding(elem, token["DATA"]);
+					this._findAndAddBinding(token["DATA"]);
 					
 					try {
 						value = eval(token["DATA"]);
@@ -162,15 +165,21 @@ JMLParser.prototype.compile = function (root) {
 JMLParser.prototype._addProperty = function (elem, property, value) 
 {
 	var tmp = value;
+	var parser = this;
 	Object.defineProperty(elem, property, {
 		get: function() { return tmp; },
 		set: function(val) {
+			if (tmp == val)
+				return;
+			
 			tmp = val;
 			// TODO find a better way
 			if (property == "source")
 				this.style[propertyNameToCSS(property)] = "url(" + tmp + ")";
 			else
 				this.style[propertyNameToCSS(property)] = tmp;
+			
+			parser._notifyPropertyChange(this.id + "::" + property);
 		}
 	});
 }
@@ -180,9 +189,19 @@ JMLParser.prototype._advance = function ()
 	this._c = this._exp[++this._i];
 }
 
+JMLParser.prototype._notifyPropertyChange = function (binding_id) 
+{
+	console.log("notification for binding " + binding_id);
+}
+
 JMLParser.prototype._addToken = function (type, data) 
 {
 	this._tokens.push( {"TOKEN" : type, "DATA" : data, "LINE" : this._line} );
+}
+
+JMLParser.prototype._checkAlphaNumberic = function (c)
+{
+	return ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'));
 }
 
 JMLParser.prototype._error = function (message) 
@@ -196,16 +215,38 @@ JMLParser.prototype._compileError = function (message, l)
 }
 
 // This currently only handles single bindings without complex expressions
-JMLParser.prototype._findAndAddBinding = function (elem, expression) 
+JMLParser.prototype._findAndAddBinding = function (expr) 
 {
-	if (expression.length == 0)
+	if (expr.length == 0)
 		return false;
 	
-	var start = expression[0];
-	if (start == '"' || (start >= '0' && start <= '9'))
+	if (expr[0] == '"' || (expr[0] >= '0' && expr[0] <= '9'))
 		return false;
 	
-	// TODO found a binding...add it
+	// extract object ids and property name
+	var elems = [];
+	var tmpProperty = "";
+	for (var i = 0; i < expr.length; ++i) {
+		if (expr[i] == '.' ) {
+			elems[elems.length] = tmpProperty;
+			tmpProperty = "";
+		} else if (this._checkAlphaNumberic(expr[i])) {
+			tmpProperty += expr[i];
+		} else {
+			break;
+		}
+	}
+	
+	// builds up an id for the binding table
+	var binding_id = "";
+	for (i = 0; i < elems.length; ++i)
+		binding_id += elems[i] + "::";
+	binding_id += tmpProperty;
+	
+	if (!this._bindings[binding_id])
+		this._bindings[binding_id] = [];
+	
+	this._bindings[binding_id][this._bindings[binding_id].length] = expr;
 	
 	return true;
 }
@@ -231,7 +272,7 @@ JMLParser.prototype._parseProperty = function ()
 	var token = "";
 	
 	while (this._c) {
-		if ((this._c >= 'A' && this._c <= 'Z') || (this._c >= 'a' && this._c <= 'z') || (this._c >= '0' && this._c <= '9'))
+		if (this._checkAlphaNumberic(this._c))
 			token += this._c;
 		else
 			break;
