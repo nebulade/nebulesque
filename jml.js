@@ -55,25 +55,6 @@ JMLParser.prototype.parse = function (jml)
 			this._addToken("EXPRESSION", this._parseExpression());
 		}
 		
-		// not allowed here
-// 		if (this._c == '+')
-// 			this._addToken("PLUS");
-// 		
-// 		if (this._c == '-')
-// 			this._addToken("MINUS");
-// 		
-// 		if (this._c >= '0' && this._c <= '9')
-// 			this._addToken("NUMBER", this._parseNumber());
-// 		
-// 		if (this._c == '"') {
-// 			var string = this._parseString();
-// 			
-// 			if (this._c == '"')
-// 				this._addToken("STRING", string);
-// 			else
-// 				this._error("Missing closing '\"'");
-// 		}
-				
 		if (this._c == ';')
 			this._addToken("SEMICOLON");
 
