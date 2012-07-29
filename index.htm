@@ -17,7 +17,7 @@
 // 			var elem2 = new Element();
 // 			elem2.setId("window2");
 
-			var anim = new NumberAnimation(function(x) { myImage.x = x; }, 0, 1000, 4000);
+			var anim = new NumberAnimation(function(x) { jml.getElementById("myImage").x = x; }, 0, 1000, 4000);
 			anim.start();
 		}
 		
@@ -38,22 +38,22 @@
 // 		}
 		
 		function changeJMLElement () {
-			var elem = document.getElementById("greenRect");
+// 			var elem = document.getElementById("greenRect");
+			var elem = jml.getElementById("greenRect");
 			elem.y = document.getElementById("myValue").value;
 		}
 		
 		function compileTextArea() {
-			var root = document.getElementById("textareajmlroot");
-			while (root.childNodes.length > 0) 
-				root.removeChild(root.lastChild);
-		
-			var parser = new JMLParser();
+// 			var root = document.getElementById("textareajmlroot");
+// 			while (root.childNodes.length > 0) 
+// 				root.removeChild(root.lastChild);
+			jml.clear();
 			
 			var jmlElement = document.getElementById("jml"); 
 			
-			parser.parse(jmlElement.value);
+			jml.parse(jmlElement.value);
 // 			parser.dumpTokens();
-			parser.compile(document.getElementById("textareajmlroot"))
+			jml.compile(document.getElementById("textareajmlroot"))
 		}
 
 		
@@ -78,7 +78,7 @@ Image {
 	width: 64;
 	height: 64;
 	source: "icon" + ".png";
-	x: 800*1.2;
+	x: greenRect.y*1.2;
 	y: greenRect.y - 50;
 }
 

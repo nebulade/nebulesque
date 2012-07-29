@@ -1,4 +1,6 @@
 
+var jml = new JMLParser();
+
 /* 
  * Convert JML property names to css names
  */
@@ -17,6 +19,65 @@ function propertyNameToCSS (name)
 	}
 }
 
+/*
+ * Main JML HTML Item
+ */
+function Item (parser, parent)
+{
+	this.parser = parser;
+	this.elem = document.createElement("div");
+	this.id = undefined;
+	
+	this.parent = parent;
+	this.type = "Item";
+	
+	this.addProperty("x", 0);
+	this.addProperty("y", 0);
+	this.addProperty("width", 0);
+	this.addProperty("height", 0);
+	this.addProperty("color", "");
+	this.addProperty("source", "");
+	this.addProperty("position", "absolute");
+}
+
+Item.prototype.setId = function (id)
+{
+	this.id = id;
+	this.elem.id = id;
+}
+
+Item.prototype.delete = function ()
+{
+	this.parent.elem.removeChild(this.elem);
+}
+
+Item.prototype.addProperty = function (property, initialValue) 
+{
+	var tmp = initialValue;
+	
+	// set initial value, ignore the source exception for now
+	// maybe replaced by a "internal_setter", that does not perform the tmp == val check
+	this.elem.style[propertyNameToCSS(property)] = tmp;
+	
+	Object.defineProperty(this, property, {
+		get: function() { return tmp; },
+		set: function(val) {
+			if (tmp == val)
+				return;
+			
+			tmp = val;
+			// TODO find a better way
+			if (property == "source")
+				this.elem.style[propertyNameToCSS(property)] = "url(" + tmp + ")";
+			else
+				this.elem.style[propertyNameToCSS(property)] = tmp;
+			
+// 			console.log("notify property change: " + this.id + "." + property);
+			this.parser._notifyPropertyChange(this, property);
+		}
+	});
+}
+
 /* 
  * JMLParser constructor
  */
@@ -29,6 +90,12 @@ function JMLParser ()
 	this._tokens = [];
 	// bindings table ["binding id" -> objectID.objectID.property][expression]
 	this._bindings = [];
+	this._elements = [];
+}
+
+JMLParser.prototype.getElementById = function (id)
+{
+	return this._elements[id];
 }
 
 /* 
@@ -97,33 +164,22 @@ JMLParser.prototype.compile = function (root) {
 	
 	root.style.visibility = "hidden";
 	
-	var elem = undefined;
-	var parent = root;
+	var element = undefined;
+	var parent = {"elem": root};
 	var property = "";
 	
 	for (i = 0; i < this._tokens.length; ++i) {
 		var token = this._tokens[i];
 		
-		if (token["TOKEN"] == "ELEMENT") {
-			elem = document.createElement("div");
-			elem.parent = parent;
-			elem.type = token["DATA"];
-                        
-			this._addProperty(elem, "x", 0);
-			this._addProperty(elem, "y", 0);
-			this._addProperty(elem, "width", 0);
-			this._addProperty(elem, "height", 0);
-			this._addProperty(elem, "color", "");
-			this._addProperty(elem, "source", "");
-			this._addProperty(elem, "position", "absolute");
-		}
+		if (token["TOKEN"] == "ELEMENT")
+			element = new Item (this, parent);
 		
 		if (token["TOKEN"] == "SCOPE_START")
-			parent = elem;
+			parent = element;
 		
 		if (token["TOKEN"] == "SCOPE_END") {
-			parent = elem.parent;
-			parent.appendChild(elem);
+			parent = element.parent;
+			parent.elem.appendChild(element.elem);
 		}
 		
 		if (token["TOKEN"] == "PROPERTY")
@@ -134,14 +190,18 @@ JMLParser.prototype.compile = function (root) {
 				this._compileError("no property to assign value");
 			else {
 				// TODO make sure id is a proper one
-				if (property == "id") 
-					elem.id = token["DATA"];
-				else {
+				if (property == "id") {
+					var id = token["DATA"];
+					if (this._elements[id])
+						this._compileError("error id " + id + " already used.", token["LINE"]); 
+					this._elements[id] = element;
+					element.setId(id);
+				} else {
 					var value = "";
 					
 					// TODO only if we dont find a binding, we need to eval the expression here
 					//      otherwise we evaluate it at the end of the compilation
-					this._findAndAddBinding(token["DATA"], elem.id, property);
+					this._findAndAddBinding(token["DATA"], element, property);
 					
 					try {
 						value = eval(token["DATA"]);
@@ -149,7 +209,7 @@ JMLParser.prototype.compile = function (root) {
 						this._compileError("error evaluating expression: " + token["DATA"], token["LINE"]);
 					}
 					
-					elem[property] = value;
+					element[property] = value;
 				}
 				property = undefined;
 			}
@@ -160,33 +220,15 @@ JMLParser.prototype.compile = function (root) {
 }
 
 /* 
- * Adds a JML property with custom setter/getter to intercept access
+ * clears internal objects
+ *  TODO: check if elements are not referenced anymore?
  */
-JMLParser.prototype._addProperty = function (elem, property, initialValue) 
+JMLParser.prototype.clear = function ()
 {
-	var tmp = initialValue;
-	var parser = this;
-	
-	// set initial value, ignore the source exception for now
-	// maybe replaced by a "internal_setter", that does not perform the tmp == val check
-	elem.style[propertyNameToCSS(property)] = tmp;
-	
-	Object.defineProperty(elem, property, {
-		get: function() { return tmp; },
-		set: function(val) {
-			if (tmp == val)
-				return;
-			
-			tmp = val;
-			// TODO find a better way
-			if (property == "source")
-				this.style[propertyNameToCSS(property)] = "url(" + tmp + ")";
-			else
-				this.style[propertyNameToCSS(property)] = tmp;
-			
-			parser._notifyPropertyChange(this.id + "." + property);
-		}
-	});
+	for (element in this._elements)
+		this._elements[element].delete();
+
+	this._elements = [];
 }
 
 /* 
@@ -201,20 +243,22 @@ JMLParser.prototype._tokenizerAdvance = function ()
  * Slot to handle a property change and evaluate the associated bindings
  *  TODO: there might be multiple bindings to the property
  */
-JMLParser.prototype._notifyPropertyChange = function (binding_id) 
+JMLParser.prototype._notifyPropertyChange = function (elem, property) 
 {
-// 	console.log("notification for binding " + binding_id);
+// 	console.log("notification for binding " + elem.id + " property " + property);
 	
-	if (this._bindings[binding_id] == undefined)
+	if (this._bindings[elem.id] == undefined)
 		return;
 
-// 	for (var i = 0; i < this._bindings[binding_id].length; ++i)
-
-// 	console.log("new value of bound property: " + eval(binding_id));
-// 	console.log("eval expr: |" + this._bindings[binding_id] + "|");
+	if (this._bindings[elem.id][property] == undefined)
+		return;
 	
-	var foo = this._bindings[binding_id] + ";";
-	eval(foo);
+	// run over all assigned bindings
+	for (var i = 0; i < this._bindings[elem.id][property].length; ++i) {
+		var binding = this._bindings[elem.id][property][i];
+		binding[0][binding[1]] = eval(binding[2]);
+		// console.log("eval expr: |" + binding[2] + "|");
+	}
 }
 
 /* 
@@ -253,7 +297,7 @@ JMLParser.prototype._compileError = function (message, l)
  * Find a binding in a expression token 
  *  TODO: This currently only handles single bindings without complex expressions
  */
-JMLParser.prototype._findAndAddBinding = function (expr, elemId, property) 
+JMLParser.prototype._findAndAddBinding = function (expr, elem, property) 
 {
 	if (expr.length == 0)
 		return false;
@@ -275,19 +319,30 @@ JMLParser.prototype._findAndAddBinding = function (expr, elemId, property)
 		}
 	}
 	
-	// builds up an id for the binding table
-	var binding_id = "";
-	for (i = 0; i < elems.length; ++i)
-		binding_id += elems[i] + ".";
-	binding_id += tmpProperty;
+	// FIXME: only able to resolve the first found id
+	var obj = undefined;
+	if (elems.length === 0)
+		obj = elem;
+	else
+		obj = this.getElementById(elems[0]);
 	
-	if (!this._bindings[binding_id])
-		this._bindings[binding_id] = [];
+	if (obj === undefined) {
+		this._compileError("Error cannot find element with id: " + elems[0]);
+		return false;
+	}
 	
-	var final_expr = elemId + "." + property + "=" + expr;
+	if (!this._bindings[obj.id])
+		this._bindings[obj.id] = [];
 	
-	this._bindings[binding_id][this._bindings[binding_id].length] = final_expr;
-	console.log("Add binding: " + binding_id + " with expression " + final_expr);
+	if (!this._bindings[obj.id][tmpProperty])
+		this._bindings[obj.id][tmpProperty] = [];
+	
+	var final_expr = expr.replace(elems[0], "jml.getElementById(\""+elems[0]+"\")");
+	
+	var tmp_binding = [elem, property, final_expr];
+	this._bindings[obj.id][tmpProperty][this._bindings[obj.id][tmpProperty].length] = tmp_binding;
+	
+	console.log("Add binding: " + elem.id + "." + property + " with expression " + final_expr + " binding count " + this._bindings[obj.id][tmpProperty].length);
 	
 	return true;
 }
