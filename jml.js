@@ -117,8 +117,13 @@ JMLParser.prototype.parse = function (jml)
 		if (this._c >= 'A' && this._c <= 'Z')
 			this._addToken("ELEMENT", this._parseElementName());
 		
-		if (this._c >= 'a' && this._c <= 'z')
-			this._addToken("PROPERTY", this._parseProperty());
+		if (this._c >= 'a' && this._c <= 'z') {
+			var tmp = this._parseProperty();
+			if (tmp == "function")
+				this._addToken("FUNCTION", this._parseFunction());
+			else
+				this._addToken("PROPERTY", tmp);
+		}
 		
 		if (this._c == '{')
 			this._addToken("SCOPE_START");
@@ -132,6 +137,9 @@ JMLParser.prototype.parse = function (jml)
 			// we found a colon so everything until \n or ; is an expression
 			this._addToken("EXPRESSION", this._parseExpression());
 		}
+		
+		if (this._c == '#')
+			this._addToken("TYPE");
 		
 		if (this._c == ';')
 			this._addToken("SEMICOLON");
@@ -362,9 +370,27 @@ JMLParser.prototype._findAndAddBinding = function (expr, elem, property)
 	var tmp_binding = [elem, property, final_expr];
 	this._bindings[object_id][tmpProperty][this._bindings[object_id][tmpProperty].length] = tmp_binding;
 	
-	console.log("Add binding: " + elem.id + "." + property + " with expression " + final_expr + " binding count " + this._bindings[object_id][tmpProperty].length);
+// 	console.log("Add binding: " + elem.id + "." + property + " with expression " + final_expr + " binding count " + this._bindings[object_id][tmpProperty].length);
 	
 	return true;
+}
+
+JMLParser.prototype._parseFunction = function ()
+{
+	var value = "";
+	
+	while (this._c) {
+		value += this._c;
+		
+		if (this._c == '}') {
+			this._tokenizerAdvance();
+			break;
+		}
+		
+		this._tokenizerAdvance();
+	}
+	
+	return value;
 }
 
 /* 
