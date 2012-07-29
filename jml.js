@@ -232,7 +232,11 @@ JMLParser.prototype.compile = function (root) {
 		for (property in element) {
 			for (var i = 0; i < element[property].length; ++i) {
 				var binding = this._bindings[element_id][property][i];
-				binding[0][binding[1]] = eval(binding[2]);
+				try {
+					binding[0][binding[1]] = eval(binding[2]);
+				} catch (e) {
+					this._compileError("error evaluating binding expression: " + e, -1);
+				}
 			}
 		}
 	}
