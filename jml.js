@@ -102,7 +102,7 @@ Item.prototype.addFunction = function (expression)
 	console.log("add function: " + name + "\n" + expression);
 	
 	var func = eval("(function " + expression.replace(name, "") + ")");
-	Object.defineProperty(this, name, {value : func});
+	Item.prototype[name] = func;
 }
 
 /* 

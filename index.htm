@@ -31,7 +31,7 @@
 		}
 
 		function executeFunction() {
-			jml.getElementById("myImage2").foobar("foobar");
+			jml.getElementById("myImage2").foobar("Test String");
 		}
 		
 	</script>
@@ -86,7 +86,7 @@ Image {
 		}
 	}
 	
-	function foobar(buh) { alert(buh); }
+	function foobar(param) { alert(param + ": " + this.id + " width=" + this.width); }
 }
 	</textarea>
 	<br/>
@@ -94,7 +94,7 @@ Image {
 	<input type="text" id="myValue" value="100"/><a href="JavaScript: changeJMLElement();">Change y of greenRect</a><br/>
 	<input type="text" id="myOpacity" value="0"/><a href="JavaScript: animateOpacity();">Animate opacity of myImage</a><br/>
 	<a href="JavaScript: run();">start Animation</a><br/>
-	<a href="JavaScript: executeFunction();">execute the function foobar("foobar") on myImage2</a><br/>
+	<a href="JavaScript: executeFunction();">execute the function foobar("Test String") on myImage2</a><br/>
 	
 	<jmlobject id="textareajmlroot">
 	</jmlobject>
