@@ -37,7 +37,6 @@ function Item (parser, parent)
 	this.addProperty("width", 0);
 	this.addProperty("height", 0);
 	this.addProperty("color", "");
-	this.addProperty("source", "");
 	this.addProperty("position", "absolute");
 	this.addProperty("opacity", 1);
 }
@@ -55,27 +54,38 @@ Item.prototype.delete = function ()
 
 Item.prototype.addProperty = function (property, initialValue) 
 {
-	var tmp = initialValue;
+	var _value = initialValue;
+	var _this = this;
+	var _property = property;
 	
-	// set initial value, ignore the source exception for now
-	// maybe replaced by a "internal_setter", that does not perform the tmp == val check
-	this.elem.style[propertyNameToCSS(property)] = tmp;
+	setterClosure();
 	
-	Object.defineProperty(this, property, {
-		get: function() { return tmp; },
+	function setterClosure() {
+		if (_property == "source") {
+			_this.elem.style[propertyNameToCSS(_property)] = "url(" + _value + ")";
+		} else if (_property == "onclick") {
+			try {
+				var func = eval("(function () {" + _value + "})");
+				_this.elem.onclick = func;
+			} catch (e) {
+				console.log("compile error for onclick handler: " + e);
+			}
+		} else {
+			_this.elem.style[propertyNameToCSS(_property)] = _value;
+		}
+	}
+	
+	Object.defineProperty(this, _property, {
+		get: function() { return _value; },
 		set: function(val) {
-			if (tmp == val)
+			if (_value == val)
 				return;
+			var _this = this;
+			_value = val;
+			setterClosure();
+			this.parser._notifyPropertyChange(this, _property);
 			
-			tmp = val;
-			// TODO find a better way
-			if (property == "source")
-				this.elem.style[propertyNameToCSS(property)] = "url(" + tmp + ")";
-			else
-				this.elem.style[propertyNameToCSS(property)] = tmp;
-			
-// 			console.log("notify property change: " + this.id + "." + property);
-			this.parser._notifyPropertyChange(this, property);
+// 			console.log("set property " + _property + " to value " + _value);
 		}
 	});
 }
@@ -99,7 +109,7 @@ Item.prototype.addFunction = function (expression)
 		c = expression[++i];
 	}
 	
-	console.log("add function: " + name + "\n" + expression);
+// 	console.log("add function: " + name + "\n" + expression);
 	
 	var func = eval("(function " + expression.replace(name, "") + ")");
 	Item.prototype[name] = func;

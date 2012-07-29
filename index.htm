@@ -26,7 +26,7 @@
 			jml.clear();
 			
 			jml.parse(document.getElementById("jml").value);
-			jml.dumpTokens();
+// 			jml.dumpTokens();
 			jml.compile(document.getElementById("textareajmlroot"))
 		}
 
@@ -49,6 +49,7 @@ Rectangle {
 	y: 50;
 	customProperty: 800;
 	opacity: myImage.opacity;
+	onclick: "alert('click')";
 }
 
 Image {
