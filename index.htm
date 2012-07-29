@@ -2,44 +2,24 @@
 	<head>
 		<title> JS Fun </title>
 
-		<script type="text/javascript" src="fun.js"></script>
+		<script type="text/javascript" src="animation.js"></script>
 		<script type="text/javascript" src="jml.js"></script>
 
 		<script type="text/javascript">
 
 		function run() {
-// 			var elem = new Element();
-// 			elem.setId("window");
-// 
-// 			elem.setXAnimation(new NumberAnimation(function() {}, 200, 400))
-// 			elem.setX(300);
-// 
-// 			var elem2 = new Element();
-// 			elem2.setId("window2");
-
-			var anim = new NumberAnimation(function(x) { jml.getElementById("myImage").x = x; }, 0, 1000, 4000);
+			var anim = new NumberAnimation(jml.getElementById("myImage"), "x", 0, 1000, 4000);
 			anim.start();
 		}
-		
-
-// 		function runJML() {
-// 			var parser = new JMLParser();
-// 			
-// 			var jmlElements = document.getElementsByTagName("jml"); 
-// 			
-// 			if (jmlElements.length == 0)  {
-// 				alert("could not find a jml tag");
-// 				return;
-// 			}
-// 				
-// 			parser.parse(jmlElements[0].firstChild.data);
-// 			parser.dumpTokens();
-// 			parser.compile(document.getElementById("myjmlroot"))
-// 		}
 		
 		function changeJMLElement () {
 			var elem = jml.getElementById("greenRect");
 			elem.y = document.getElementById("myValue").value;
+		}
+		
+		function animateOpacity () {
+			var anim = new NumberAnimation(jml.getElementById("myImage"), "opacity", jml.getElementById("myImage").opacity, document.getElementById("myOpacity").value, 2000);
+			anim.start();
 		}
 		
 		function compileTextArea() {
@@ -66,6 +46,7 @@ Rectangle {
 	x: 0;
 	y: 50;
 	customProperty: 800;
+	opacity: myImage.opacity;
 }
 
 Image {
@@ -89,6 +70,7 @@ Image {
 	<br/>
 	<a href="JavaScript: compileTextArea();">Compile</a><br/>
 	<input type="text" id="myValue" value="100"/><a href="JavaScript: changeJMLElement();">Change y of greenRect</a><br/>
+	<input type="text" id="myOpacity" value="0"/><a href="JavaScript: animateOpacity();">Animate opacity of myImage</a><br/>
 	<a href="JavaScript: run();">start Animation</a><br/>
 	
 	<jmlobject id="textareajmlroot">

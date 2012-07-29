@@ -15,6 +15,7 @@ function propertyNameToCSS (name)
 		case "color"	: return "background-color";
 		case "source"	: return "background-image";
 		case "position" : return "position";
+		case "opacity"  : return "opacity";
 		default: return "";
 	}
 }
@@ -38,6 +39,7 @@ function Item (parser, parent)
 	this.addProperty("color", "");
 	this.addProperty("source", "");
 	this.addProperty("position", "absolute");
+	this.addProperty("opacity", 1);
 }
 
 Item.prototype.setId = function (id)
@@ -334,29 +336,24 @@ JMLParser.prototype._findAndAddBinding = function (expr, elem, property)
 	}
 	
 	// FIXME: only able to resolve the first found id
-	var obj = undefined;
+	var object_id = "";
 	if (elems.length === 0)
-		obj = elem;
+		object_id = elem.id;
 	else
-		obj = this.getElementById(elems[0]);
+		object_id = elems[0];
 	
-	if (obj === undefined) {
-		this._compileError("Error cannot find element with id: " + elems[0]);
-		return false;
-	}
+	if (!this._bindings[object_id])
+		this._bindings[object_id] = [];
 	
-	if (!this._bindings[obj.id])
-		this._bindings[obj.id] = [];
-	
-	if (!this._bindings[obj.id][tmpProperty])
-		this._bindings[obj.id][tmpProperty] = [];
+	if (!this._bindings[object_id][tmpProperty])
+		this._bindings[object_id][tmpProperty] = [];
 	
 	var final_expr = expr.replace(elems[0], "jml.getElementById(\""+elems[0]+"\")");
 	
 	var tmp_binding = [elem, property, final_expr];
-	this._bindings[obj.id][tmpProperty][this._bindings[obj.id][tmpProperty].length] = tmp_binding;
+	this._bindings[object_id][tmpProperty][this._bindings[object_id][tmpProperty].length] = tmp_binding;
 	
-	console.log("Add binding: " + elem.id + "." + property + " with expression " + final_expr + " binding count " + this._bindings[obj.id][tmpProperty].length);
+	console.log("Add binding: " + elem.id + "." + property + " with expression " + final_expr + " binding count " + this._bindings[object_id][tmpProperty].length);
 	
 	return true;
 }
