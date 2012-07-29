@@ -216,6 +216,17 @@ JMLParser.prototype.compile = function (root) {
 		}
 	}
 	
+	// run all bindings once
+	for (element_id in this._bindings) {
+		var element = this._bindings[element_id];
+		for (property in element) {
+			for (var i = 0; i < element[property].length; ++i) {
+				var binding = this._bindings[element_id][property][i];
+				binding[0][binding[1]] = eval(binding[2]);
+			}
+		}
+	}
+	
 	root.style.visibility = "visible";
 }
 

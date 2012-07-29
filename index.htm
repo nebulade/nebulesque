@@ -38,20 +38,14 @@
 // 		}
 		
 		function changeJMLElement () {
-// 			var elem = document.getElementById("greenRect");
 			var elem = jml.getElementById("greenRect");
 			elem.y = document.getElementById("myValue").value;
 		}
 		
 		function compileTextArea() {
-// 			var root = document.getElementById("textareajmlroot");
-// 			while (root.childNodes.length > 0) 
-// 				root.removeChild(root.lastChild);
 			jml.clear();
 			
-			var jmlElement = document.getElementById("jml"); 
-			
-			jml.parse(jmlElement.value);
+			jml.parse(document.getElementById("jml").value);
 // 			parser.dumpTokens();
 			jml.compile(document.getElementById("textareajmlroot"))
 		}
