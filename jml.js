@@ -80,6 +80,31 @@ Item.prototype.addProperty = function (property, initialValue)
 	});
 }
 
+Item.prototype.addFunction = function (expression)
+{
+	if (expression == "")
+		return;
+	
+	var i = 0;
+	var c = expression[i];
+	var name = "";
+	
+	while (c) {
+		if (c == '(')
+			break;
+		
+		if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||  (c >= '0' && c <= '9'))
+			name += c;
+		
+		c = expression[++i];
+	}
+	
+	console.log("add function: " + name + "\n" + expression);
+	
+	var func = eval("(function " + expression.replace(name, "") + ")");
+	Object.defineProperty(this, name, {value : func});
+}
+
 /* 
  * JMLParser constructor
  */
@@ -232,6 +257,9 @@ JMLParser.prototype.compile = function (root) {
 				property = undefined;
 			}
 		}
+		
+		if (token["TOKEN"] == "FUNCTION")
+			element.addFunction(token["DATA"]);
 	}
 	
 	// run all bindings once
