@@ -65,6 +65,7 @@ Rectangle {
 	color: "green";
 	x: 0;
 	y: 50;
+	customProperty: 800;
 }
 
 Image {
@@ -72,7 +73,7 @@ Image {
 	width: 64;
 	height: 64;
 	source: "icon" + ".png";
-	x: greenRect.y*1.2;
+	x: greenRect.customProperty*1.2;
 	y: greenRect.y - 50;
 }
 

@@ -201,15 +201,18 @@ JMLParser.prototype.compile = function (root) {
 					
 					// TODO only if we dont find a binding, we need to eval the expression here
 					//      otherwise we evaluate it at the end of the compilation
-					this._findAndAddBinding(token["DATA"], element, property);
-					
-					try {
-						value = eval(token["DATA"]);
-					} catch (e) {
-						this._compileError("error evaluating expression: " + token["DATA"], token["LINE"]);
+					if (this._findAndAddBinding(token["DATA"], element, property) === false) {
+						try {
+							value = eval(token["DATA"]);
+						} catch (e) {
+							this._compileError("error evaluating expression: " + token["DATA"], token["LINE"]);
+						}
+						
+						if (element[property] === undefined)
+							element.addProperty(property, value);
+						else
+							element[property] = value;
 					}
-					
-					element[property] = value;
 				}
 				property = undefined;
 			}
