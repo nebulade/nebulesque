@@ -166,6 +166,7 @@ JMLParser.prototype.compile = function (root) {
 	
 	root.style.visibility = "hidden";
 	
+	var elements = [];
 	var element = undefined;
 	var parent = {"elem": root};
 	var property = "";
@@ -174,12 +175,16 @@ JMLParser.prototype.compile = function (root) {
 		var token = this._tokens[i];
 		
 		if (token["TOKEN"] == "ELEMENT")
-			element = new Item (this, parent);
+			element = new Item (this, parent.elem);
 		
-		if (token["TOKEN"] == "SCOPE_START")
+		if (token["TOKEN"] == "SCOPE_START") {
+			elements.push(element);
+			element.parent = parent;
 			parent = element;
+		}
 		
 		if (token["TOKEN"] == "SCOPE_END") {
+			element = elements.pop();
 			parent = element.parent;
 			parent.elem.appendChild(element.elem);
 		}
