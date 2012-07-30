@@ -2,93 +2,6 @@
 
 var jml = new JMLParser();
 
-/* 
- * Convert JML property names to css names
- */
-function propertyNameToCSS (name) 
-{
-	switch (name) {
-		case "id"	: return "id";
-		case "width"	: return "width";
-		case "height"	: return "height";
-		case "x"	: return "left";
-		case "y"	: return "top";
-		case "color"	: return "background-color";
-		case "source"	: return "background-image";
-		case "position" : return "position";
-		case "opacity"  : return "opacity";
-		default: return "";
-	}
-}
-
-/*
- * Main JML HTML Item
- */
-function Item (parser, parent)
-{
-	this.parser = parser;
-	this.elem = document.createElement("div");
-	this.id = undefined;
-	
-	this.parent = parent;
-	this.type = "Item";
-	
-	this.addProperty("x", 0);
-	this.addProperty("y", 0);
-	this.addProperty("width", 0);
-	this.addProperty("height", 0);
-	this.addProperty("color", "");
-	this.addProperty("position", "absolute");
-	this.addProperty("opacity", 1);
-}
-
-Item.prototype.setId = function (id)
-{
-	this.id = id;
-	this.elem.id = id;
-}
-
-Item.prototype.delete = function ()
-{
-	this.parent.elem.removeChild(this.elem);
-}
-
-Item.prototype.addProperty = function (property, initialValue) 
-{
-	var _value = initialValue;
-	var _this = this;
-	var _property = property;
-	
-	setterClosure();
-	
-	function setterClosure() {
-		if (_property == "onclick") {
-			try {
-				var func = eval("(function () {" + _value + "})");
-				_this.elem.onclick = func;
-			} catch (e) {
-				console.log("compile error for onclick handler: " + e);
-			}
-		} else {
-			_this.elem.style[propertyNameToCSS(_property)] = _value;
-		}
-	}
-	
-	Object.defineProperty(this, _property, {
-		get: function() { return _value; },
-		set: function(val) {
-			if (_value == val)
-				return;
-			var _this = this;
-			_value = val;
-			setterClosure();
-			this.parser._notifyPropertyChange(this, _property);
-			
-// 			console.log("set property " + _property + " to value " + _value);
-		}
-	});
-}
-
 JMLParser.prototype._addFunction = function (className, expression)
 {
 	if (expression == "")
@@ -112,6 +25,31 @@ JMLParser.prototype._addFunction = function (className, expression)
 	
 	var func = eval("(function " + expression.replace(name, "") + ")");
 	window["Item"].prototype[name] = func;
+}
+
+JMLParser.prototype.addProperty = function (element, property, initialValue) 
+{
+	var _value = initialValue;
+	var _this = this;
+	var _property = property;
+	var _element = element;
+	
+	if (window[_element.type].prototype.setProperty !== undefined)
+		window[_element.type].prototype.setProperty.call(_element, _property, _value);
+	
+	Object.defineProperty(_element, _property, {
+		get: function() { return _value; },
+		set: function(val) {
+			if (_value == val)
+				return;
+			_value = val;
+			if (window[_element.type].prototype.setProperty !== undefined)
+				window[_element.type].prototype.setProperty.call(_element, _property, _value);
+			_this._notifyPropertyChange(_element, _property);
+			
+// 			console.log("set property " + _property + " to value " + _value);
+			      }
+	});
 }
 
 /* 
@@ -217,7 +155,7 @@ JMLParser.prototype.compile = function (root) {
 		var token = this._tokens[i];
 		
 		if (token["TOKEN"] == "ELEMENT") {
-			element = new window[token["DATA"]] (this, parent.elem);
+			element = new window[token["DATA"]] (this, parent);
 			element.className = token["DATA"];
 		}
 		
@@ -230,7 +168,6 @@ JMLParser.prototype.compile = function (root) {
 		if (token["TOKEN"] == "SCOPE_END") {
 			element = elements.pop();
 			parent = element.parent;
-			parent.elem.appendChild(element.elem);
 		}
 		
 		if (token["TOKEN"] == "PROPERTY")
@@ -246,7 +183,9 @@ JMLParser.prototype.compile = function (root) {
 					if (this._elements[id])
 						this._compileError("error id " + id + " already used.", token["LINE"]); 
 					this._elements[id] = element;
-					element.setId(id);
+					if (window[element.type].prototype.setId)
+						window[element.type].prototype.setId.call(element, id);
+					element.id = id;
 				} else {
 					var value = "";
 					
@@ -260,7 +199,7 @@ JMLParser.prototype.compile = function (root) {
 						}
 						
 						if (element[property] === undefined)
-							element.addProperty(property, value);
+							this.addProperty(element, property, value);
 						else
 							element[property] = value;
 					}
@@ -297,8 +236,11 @@ JMLParser.prototype.compile = function (root) {
  */
 JMLParser.prototype.clear = function ()
 {
-	for (element in this._elements)
-		this._elements[element].delete();
+	for (var element_id in this._elements) {
+		var element = this._elements[element_id];
+		if (window[element.type].prototype.delete)
+			window[element.type].prototype.delete.call(element);
+	}
 
 	this._elements = [];
 }
