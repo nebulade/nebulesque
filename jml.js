@@ -1,3 +1,4 @@
+"use strict";
 
 var jml = new JMLParser();
 
@@ -61,9 +62,7 @@ Item.prototype.addProperty = function (property, initialValue)
 	setterClosure();
 	
 	function setterClosure() {
-		if (_property == "source") {
-			_this.elem.style[propertyNameToCSS(_property)] = "url(" + _value + ")";
-		} else if (_property == "onclick") {
+		if (_property == "onclick") {
 			try {
 				var func = eval("(function () {" + _value + "})");
 				_this.elem.onclick = func;
@@ -90,7 +89,7 @@ Item.prototype.addProperty = function (property, initialValue)
 	});
 }
 
-Item.prototype.addFunction = function (expression)
+JMLParser.prototype._addFunction = function (className, expression)
 {
 	if (expression == "")
 		return;
@@ -112,7 +111,7 @@ Item.prototype.addFunction = function (expression)
 // 	console.log("add function: " + name + "\n" + expression);
 	
 	var func = eval("(function " + expression.replace(name, "") + ")");
-	Item.prototype[name] = func;
+	window["Item"].prototype[name] = func;
 }
 
 /* 
@@ -217,8 +216,10 @@ JMLParser.prototype.compile = function (root) {
 	for (i = 0; i < this._tokens.length; ++i) {
 		var token = this._tokens[i];
 		
-		if (token["TOKEN"] == "ELEMENT")
-			element = new Item (this, parent.elem);
+		if (token["TOKEN"] == "ELEMENT") {
+			element = new window[token["DATA"]] (this, parent.elem);
+			element.className = token["DATA"];
+		}
 		
 		if (token["TOKEN"] == "SCOPE_START") {
 			elements.push(element);
@@ -269,11 +270,11 @@ JMLParser.prototype.compile = function (root) {
 		}
 		
 		if (token["TOKEN"] == "FUNCTION")
-			element.addFunction(token["DATA"]);
+			this._addFunction(element.className, token["DATA"]);
 	}
 	
 	// run all bindings once
-	for (element_id in this._bindings) {
+	for (var element_id in this._bindings) {
 		var element = this._bindings[element_id];
 		for (property in element) {
 			for (var i = 0; i < element[property].length; ++i) {
