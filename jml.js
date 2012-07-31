@@ -9,24 +9,15 @@ JMLParser.prototype._addFunction = function (type, expression)
 	if (expression == "")
 		return;
 	
-	var i = 0;
-	var c = expression[i];
-	var name = "";
+	var name = expression.slice("function ".length, expression.indexOf('('));
+	var func;
 	
-	while (c) {
-		if (c == '(')
-			break;
-		
-		if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||  (c >= '0' && c <= '9'))
-			name += c;
-		
-		c = expression[++i];
+	try {
+		func = eval("(" + expression.replace(name, "") + ")");
+		window[type].prototype[name] = func;
+	} catch (e) {
+		this._compileError("cannot create member function " + name);
 	}
-	
-// 	console.log("add function: " + name + "\n" + expression);
-	
-	var func = eval("(" + expression.replace(name, "") + ")");
-	window[type].prototype[name] = func;
 }
 
 JMLParser.prototype.addProperty = function (element, property, initialValue) 
@@ -217,8 +208,8 @@ JMLParser.prototype.compile = function (root) {
 			}
 		}
 		
-// 		if (token["TOKEN"] === "FUNCTION")
-// 			this._addFunction(element.type, token["DATA"]);
+		if (token["TOKEN"] === "FUNCTION")
+			this._addFunction(element.type, token["DATA"]);
 	}
 	
 	// run all bindings once

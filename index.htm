@@ -27,11 +27,12 @@
 			jml.clear();
 			
 			jml.parse(document.getElementById("jml").value);
-			jml.dumpTokens();
+// 			jml.dumpTokens();
 			jml.compile(document.getElementById("textareajmlroot"))
 		}
 
 		function executeFunction() {
+			console.dir(jml.getElementById("myImage2"));
 			jml.getElementById("myImage2").foobar("Test String");
 		}
 		
@@ -92,7 +93,7 @@ Item {
 		}
 	}
 	
-	function foobar(test) { alert("foobar function" + test); };
+	function foobar(test) { alert("foobar function " + test); };
 }
 	</textarea>
 	<br/>
