@@ -27,8 +27,8 @@
 			jml.clear();
 			
 			jml.parse(document.getElementById("jml").value);
-// 			jml.dumpTokens();
-			jml.compile(document.getElementById("textareajmlroot"))
+			jml.dumpTokens();
+// 			jml.compile(document.getElementById("textareajmlroot"))
 		}
 
 		function executeFunction() {
@@ -41,6 +41,10 @@
 	<body>
 	
 	<textarea id="jml" rows=20 cols=80>
+MyItem : Item {
+	z: 10;
+}
+
 Item {
 	id: greenRect;
 	width: 20;

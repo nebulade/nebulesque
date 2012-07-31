@@ -91,13 +91,8 @@ JMLParser.prototype.parse = function (jml)
 		if (this._c >= 'A' && this._c <= 'Z')
 			this._addToken("ELEMENT", this._parseElementName());
 		
-		if (this._c >= 'a' && this._c <= 'z') {
-			var tmp = this._parseProperty();
-			if (tmp === "function")
-				this._addToken("FUNCTION", this._parseFunction());
-			else
-				this._addToken("PROPERTY", tmp);
-		}
+		if (this._c >= 'a' && this._c <= 'z')
+			this._addToken("EXPRESSION", this._parseExpression());
 		
 		if (this._c === '{')
 			this._addToken("SCOPE_START");
@@ -105,15 +100,8 @@ JMLParser.prototype.parse = function (jml)
 		if (this._c === '}')
 			this._addToken("SCOPE_END");
 		
-		if (this._c === ':') {
+		if (this._c === ':')
 			this._addToken("COLON");
-			this._tokenizerAdvance();
-			// we found a colon so everything until \n or ; is an expression
-			this._addToken("EXPRESSION", this._parseExpression());
-		}
-		
-		if (this._c === '#')
-			this._addToken("TYPE");
 		
 		if (this._c === ';')
 			this._addToken("SEMICOLON");
@@ -396,37 +384,18 @@ JMLParser.prototype._parseElementName = function ()
 }
 
 /* 
- * Tokenizer: extract a property name
- */
-JMLParser.prototype._parseProperty = function () 
-{
-	var token = "";
-	
-	while (this._c) {
-		if (this._checkAlphaNumeric(this._c))
-			token += this._c;
-		else
-			break;
-		
-		this._tokenizerAdvance();
-	}
-	
-	return token;
-}
-
-/* 
- * Tokenizer: extract an right side expression, called after COLON token found
+ * Tokenizer: extract an expression, can be a property definition, function or right side expression after :
  */
 JMLParser.prototype._parseExpression = function () 
 {
 	var expression = "";
 	
 	while (this._c) {
-		if (this._c === '\n' || this._c === ';')
+		if (this._c === '\n' || this._c === ';' || this._c === ':')
 			break;
 		
 		// ignore whitespace
-		if (this._c !== '\t' && this._c !== ' ')
+		if ((this._c !== '\t' && this._c !== ' ') || expression === "function")
 			expression += this._c;
 		
 		this._tokenizerAdvance();
