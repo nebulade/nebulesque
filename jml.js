@@ -2,7 +2,7 @@
 
 var jml = new JMLParser();
 
-JMLParser.prototype._addFunction = function (className, expression)
+JMLParser.prototype._addFunction = function (type, expression)
 {
 	if (expression == "")
 		return;
@@ -24,7 +24,7 @@ JMLParser.prototype._addFunction = function (className, expression)
 // 	console.log("add function: " + name + "\n" + expression);
 	
 	var func = eval("(function " + expression.replace(name, "") + ")");
-	window["Item"].prototype[name] = func;
+	window[type].prototype[name] = func;
 }
 
 JMLParser.prototype.addProperty = function (element, property, initialValue) 
@@ -91,32 +91,32 @@ JMLParser.prototype.parse = function (jml)
 		
 		if (this._c >= 'a' && this._c <= 'z') {
 			var tmp = this._parseProperty();
-			if (tmp == "function")
+			if (tmp === "function")
 				this._addToken("FUNCTION", this._parseFunction());
 			else
 				this._addToken("PROPERTY", tmp);
 		}
 		
-		if (this._c == '{')
+		if (this._c === '{')
 			this._addToken("SCOPE_START");
 		
-		if (this._c == '}')
+		if (this._c === '}')
 			this._addToken("SCOPE_END");
 		
-		if (this._c == ':') {
+		if (this._c === ':') {
 			this._addToken("COLON");
 			this._tokenizerAdvance();
 			// we found a colon so everything until \n or ; is an expression
 			this._addToken("EXPRESSION", this._parseExpression());
 		}
 		
-		if (this._c == '#')
+		if (this._c === '#')
 			this._addToken("TYPE");
 		
-		if (this._c == ';')
+		if (this._c === ';')
 			this._addToken("SEMICOLON");
 
-		if (this._c == '\n')
+		if (this._c === '\n')
 			++this._line;
 	
 		this._tokenizerAdvance();
@@ -130,7 +130,7 @@ JMLParser.prototype.parse = function (jml)
  */
 JMLParser.prototype.dumpTokens = function () 
 {
-	for (i = 0; i < this._tokens.length; ++i)
+	for (var i = 0; i < this._tokens.length; ++i)
 		console.log("TOKEN: " + this._tokens[i]["TOKEN"] + " " + (this._tokens[i]["DATA"] ? this._tokens[i]["DATA"] : ""));
 }
 
@@ -151,34 +151,34 @@ JMLParser.prototype.compile = function (root) {
 	var parent = {"elem": root};
 	var property = "";
 	
-	for (i = 0; i < this._tokens.length; ++i) {
+	for (var i = 0; i < this._tokens.length; ++i) {
 		var token = this._tokens[i];
 		
-		if (token["TOKEN"] == "ELEMENT") {
+		if (token["TOKEN"] === "ELEMENT") {
 			element = new window[token["DATA"]] (this, parent);
-			element.className = token["DATA"];
+			element.type = token["DATA"];
 		}
 		
-		if (token["TOKEN"] == "SCOPE_START") {
+		if (token["TOKEN"] === "SCOPE_START") {
 			elements.push(element);
 			element.parent = parent;
 			parent = element;
 		}
 		
-		if (token["TOKEN"] == "SCOPE_END") {
+		if (token["TOKEN"] === "SCOPE_END") {
 			element = elements.pop();
 			parent = element.parent;
 		}
 		
-		if (token["TOKEN"] == "PROPERTY")
+		if (token["TOKEN"] === "PROPERTY")
 			property = token["DATA"];
 		
-		if (token["TOKEN"] == "EXPRESSION") {
+		if (token["TOKEN"] === "EXPRESSION") {
 			if (!property)
 				this._compileError("no property to assign value");
 			else {
 				// TODO make sure id is a proper one
-				if (property == "id") {
+				if (property === "id") {
 					var id = token["DATA"];
 					if (this._elements[id])
 						this._compileError("error id " + id + " already used.", token["LINE"]); 
@@ -208,8 +208,8 @@ JMLParser.prototype.compile = function (root) {
 			}
 		}
 		
-		if (token["TOKEN"] == "FUNCTION")
-			this._addFunction(element.className, token["DATA"]);
+		if (token["TOKEN"] === "FUNCTION")
+			this._addFunction(element.type, token["DATA"]);
 	}
 	
 	// run all bindings once
@@ -286,7 +286,7 @@ JMLParser.prototype._addToken = function (type, data)
 /* 
  * Tokenizer: check if character is actual an alphanumeric one
  */
-JMLParser.prototype._checkAlphaNumberic = function (c)
+JMLParser.prototype._checkAlphaNumeric = function (c)
 {
 	return ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'));
 }
@@ -326,7 +326,7 @@ JMLParser.prototype._findAndAddBinding = function (expr, elem, property)
 		if (expr[i] == '.' ) {
 			elems[elems.length] = tmpProperty;
 			tmpProperty = "";
-		} else if (this._checkAlphaNumberic(expr[i])) {
+		} else if (this._checkAlphaNumeric(expr[i])) {
 			tmpProperty += expr[i];
 		} else {
 			break;
@@ -363,7 +363,7 @@ JMLParser.prototype._parseFunction = function ()
 	while (this._c) {
 		value += this._c;
 		
-		if (this._c == '}') {
+		if (this._c === '}') {
 			this._tokenizerAdvance();
 			break;
 		}
@@ -401,7 +401,7 @@ JMLParser.prototype._parseProperty = function ()
 	var token = "";
 	
 	while (this._c) {
-		if (this._checkAlphaNumberic(this._c))
+		if (this._checkAlphaNumeric(this._c))
 			token += this._c;
 		else
 			break;
@@ -410,51 +410,6 @@ JMLParser.prototype._parseProperty = function ()
 	}
 	
 	return token;
-}
-
-/* 
- * Tokenizer: extract a string based on double quotes
- *  TODO: handle single quotes?
- */
-JMLParser.prototype._parseString = function () 
-{
-	var token = "";
-	
-	if (this._c == '"')
-		this._tokenizerAdvance();
-	
-	while (this._c) {
-		if (this._c != '"' && this._c != '\n')
-			token += this._c;
-		else
-			break;
-		
-		this._tokenizerAdvance();
-	}
-	
-	return token;
-}
-
-/* 
- * Tokenizer: extract a Number
- *  TODO: handle doubles, negative and such
- */
-JMLParser.prototype._parseNumber = function () 
-{
-	var number = 0;
-	
-	while (this._c) {
-		if (this._c >= '0' && this._c <= '9') {
-			number *= 10;
-			number += parseInt(this._c);
-		} else {
-			break;
-		}
-		
-		this._tokenizerAdvance();
-	}
-	
-	return number;
 }
 
 /* 
@@ -465,11 +420,11 @@ JMLParser.prototype._parseExpression = function ()
 	var expression = "";
 	
 	while (this._c) {
-		if (this._c == '\n' || this._c == ';')
+		if (this._c === '\n' || this._c === ';')
 			break;
 		
 		// ignore whitespace
-		if (this._c != '\t' && this._c != ' ')
+		if (this._c !== '\t' && this._c !== ' ')
 			expression += this._c;
 		
 		this._tokenizerAdvance();
