@@ -1,3 +1,5 @@
+// Copyright (c) 2012 Johannes Zellner webmaster@nebulon.de - All Rights Reserved
+
 "use strict";
 
 /* 

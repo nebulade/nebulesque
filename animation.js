@@ -1,3 +1,4 @@
+// Copyright (c) 2012 Johannes Zellner webmaster@nebulon.de - All Rights Reserved
 
 function NumberAnimation(element, property, from, to, duration) {
 	this.element = element;
