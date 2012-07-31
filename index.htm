@@ -9,7 +9,7 @@
 		<script type="text/javascript">
 
 		function run() {
-			var anim = new NumberAnimation(jml.getElementById("myImage"), "x", 0, 1000, 4000);
+			var anim = new NumberAnimation(jml.getElementById("myImage"), "x", 0, 600, 2000);
 			anim.start();
 		}
 		
@@ -28,7 +28,7 @@
 			
 			jml.parse(document.getElementById("jml").value);
 			jml.dumpTokens();
-// 			jml.compile(document.getElementById("textareajmlroot"))
+			jml.compile(document.getElementById("textareajmlroot"))
 		}
 
 		function executeFunction() {
@@ -92,7 +92,7 @@ Item {
 		}
 	}
 	
-	function foobar(param) { alert(param + ": " + this.id + " width=" + this.width); }
+	function foobar(test) { alert("foobar function" + test); };
 }
 	</textarea>
 	<br/>
@@ -104,30 +104,6 @@ Item {
 	
 	<jmlobject id="textareajmlroot">
 	</jmlobject>
-	
-<!--		<div id="window" style="left: 200; top: 100; position: absolute; width: 100; height: 100;
-		background-color: #00ff00;">
-		</div>
-		
-		<div id="window2" style="left: 0; top: 0; position: absolute; width: 50; height: 50; background-color: #ff0000;">
-		</div>-->
-		
-	
-<!--	<jml style="visibility: hidden">
-
-		Rectangle {
-			id: redRect;
-			width: 10;
-			height: 10;
-			color: "red";
-			x: 400;
-			y: 30;
-		}
-	</jml>
-	
-	<jmlobject id="myjmlroot">
-	</jmlobject>-->
-
 		
 	</body>
 </html>

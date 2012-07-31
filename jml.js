@@ -25,7 +25,7 @@ JMLParser.prototype._addFunction = function (type, expression)
 	
 // 	console.log("add function: " + name + "\n" + expression);
 	
-	var func = eval("(function " + expression.replace(name, "") + ")");
+	var func = eval("(" + expression.replace(name, "") + ")");
 	window[type].prototype[name] = func;
 }
 
@@ -91,7 +91,13 @@ JMLParser.prototype.parse = function (jml)
 		if (this._c >= 'A' && this._c <= 'Z')
 			this._addToken("ELEMENT", this._parseElementName());
 		
-		if (this._c >= 'a' && this._c <= 'z')
+		if (this._c >= 'a' && this._c <= 'z') {
+			var tmp = this._parseFunction();
+			if (tmp.isFunction)
+				this._addToken("FUNCTION", tmp.content);
+		}
+		
+		if ((this._c >= 'a' && this._c <= 'z') || (this._c >= '0' && this._c <= '9') || this._c === '"' || this._c === '\'' || this._c === '(')
 			this._addToken("EXPRESSION", this._parseExpression());
 		
 		if (this._c === '{')
@@ -140,13 +146,22 @@ JMLParser.prototype.compile = function (root) {
 	var element = undefined;
 	var parent = {"elem": root};
 	var property = "";
+	var token_length = this._tokens.length;
 	
-	for (var i = 0; i < this._tokens.length; ++i) {
+	for (var i = 0; i < token_length; i += 1) {
 		var token = this._tokens[i];
 		
 		if (token["TOKEN"] === "ELEMENT") {
-			element = new window[token["DATA"]] (this, parent);
-			element.type = token["DATA"];
+			var next_token = (i+1 < token_length) ? this._tokens[i+1] : undefined;
+			if (next_token && next_token["TOKEN"] === "COLON") {
+// 				console.log("new type found: " + token["DATA"]);
+				i += 1;
+				continue;
+			} else {
+// 				console.log("create type " + token["DATA"]);
+				element = new window[token["DATA"]] (this, parent);
+				element.type = token["DATA"];
+			}
 		}
 		
 		if (token["TOKEN"] === "SCOPE_START") {
@@ -160,13 +175,17 @@ JMLParser.prototype.compile = function (root) {
 			parent = element.parent;
 		}
 		
-		if (token["TOKEN"] === "PROPERTY")
-			property = token["DATA"];
-		
 		if (token["TOKEN"] === "EXPRESSION") {
-			if (!property)
-				this._compileError("no property to assign value");
-			else {
+			if (!property) {
+				var next_token = (i+1 < token_length) ? this._tokens[i+1] : undefined;
+				if (next_token && next_token["TOKEN"] === "COLON") {
+					property = token["DATA"];
+					i += 1;
+					continue;
+				} else {
+					this._compileError("no property to assign value or function found");
+				}
+			} else {
 				// TODO make sure id is a proper one
 				if (property === "id") {
 					var id = token["DATA"];
@@ -198,8 +217,8 @@ JMLParser.prototype.compile = function (root) {
 			}
 		}
 		
-		if (token["TOKEN"] === "FUNCTION")
-			this._addFunction(element.type, token["DATA"]);
+// 		if (token["TOKEN"] === "FUNCTION")
+// 			this._addFunction(element.type, token["DATA"]);
 	}
 	
 	// run all bindings once
@@ -346,24 +365,6 @@ JMLParser.prototype._findAndAddBinding = function (expr, elem, property)
 	return true;
 }
 
-JMLParser.prototype._parseFunction = function ()
-{
-	var value = "";
-	
-	while (this._c) {
-		value += this._c;
-		
-		if (this._c === '}') {
-			this._tokenizerAdvance();
-			break;
-		}
-		
-		this._tokenizerAdvance();
-	}
-	
-	return value;
-}
-
 /* 
  * Tokenizer: extract an element name
  */
@@ -381,6 +382,50 @@ JMLParser.prototype._parseElementName = function ()
 	}
 	
 	return token;
+}
+
+JMLParser.prototype._parseFunction = function ()
+{
+	var i_save = this._i;
+	var token = "";
+	var scope = 0;
+	var ret = {};
+	ret.isFunction = false;
+	ret.content = "";
+	
+	while (this._c) {
+		if (token === "function ") 
+			ret.isFunction = true;
+		
+		if (ret.isFunction) {
+			if (this._c === '{') {
+				scope += 1;
+			} else if (this._c === '}') {
+				scope -= 1;
+				if (!scope) {
+					// consume last } and advance tokenizer before returning;
+					token += this._c;
+					this._tokenizerAdvance();
+					ret.content = token;
+					return ret;
+				}
+			}
+			token += this._c;
+		} else {
+			if (this._checkAlphaNumeric(this._c) || this._c === ' ')
+				token += this._c;
+			else
+				break;
+		}
+		
+		this._tokenizerAdvance();
+	}
+	
+	// no function found so restore 
+	this._i = i_save-1;
+	this._tokenizerAdvance();
+	
+	return ret;
 }
 
 /* 
