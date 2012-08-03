@@ -26,6 +26,9 @@ function propertyNameToCSS (name)
  */
 function Item (jml, parent)
 {
+	if (!jml)
+		return;
+	
 	this.elem = document.createElement("div");
 	this.id = undefined;
 	this.jml = jml;
@@ -37,7 +40,6 @@ function Item (jml, parent)
 	jml.addProperty(this, "y", 0);
 	jml.addProperty(this, "width", 0);
 	jml.addProperty(this, "height", 0);
-	jml.addProperty(this, "color", "");
 	jml.addProperty(this, "position", "absolute");
 	jml.addProperty(this, "opacity", 1);
 	
@@ -69,3 +71,14 @@ Item.prototype.setProperty = function (property, value)
 		this.elem.style[propertyNameToCSS(property)] = value;
 	}
 }
+
+
+function Rectangle (jml, parent)
+{
+	Item.apply(this, arguments);
+	
+	jml.addProperty(this, "color", "");
+	jml.addProperty(this, "border-color", "");
+}
+
+Rectangle.prototype = new Item();

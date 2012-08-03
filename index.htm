@@ -24,11 +24,13 @@
 		}
 		
 		function compileTextArea() {
+
 			jml.clear();
 			
 			jml.parse(document.getElementById("jml").value);
 // 			jml.dumpTokens();
-			jml.compile(document.getElementById("textareajmlroot"))
+			jml.compile(document.getElementById("textareajmlroot"));
+			jml.dumpElements();
 		}
 
 		function executeFunction() {
@@ -42,11 +44,7 @@
 	<body>
 	
 	<textarea id="jml" rows=20 cols=80>
-MyItem : Item {
-	z: 10;
-}
-
-Item {
+Rectangle {
 	id: greenRect;
 	width: 20;
 	height: 30;

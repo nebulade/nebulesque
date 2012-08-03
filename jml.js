@@ -122,6 +122,15 @@ JMLParser.prototype.dumpTokens = function ()
 }
 
 /* 
+ * Print all elements on the console 
+ */
+JMLParser.prototype.dumpElements = function () 
+{
+	for (var element_id in this._elements)
+		console.dir(this._elements[element_id]);
+}
+
+/* 
  * Take all tokens and compile it to real elements with properties and bindings
  *  TODO cannot handle nested elements...very easy to add I just didn't bother
  */
@@ -237,6 +246,7 @@ JMLParser.prototype.compile = function (root) {
 JMLParser.prototype.clear = function ()
 {
 	for (var element_id in this._elements) {
+		console.log(element_id);
 		var element = this._elements[element_id];
 		if (window[element.type].prototype.delete)
 			window[element.type].prototype.delete.call(element);
