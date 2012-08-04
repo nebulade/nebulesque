@@ -2,7 +2,8 @@
 
 "use strict";
 
-var jml = new JMLParser();
+var QuickJS = QuickJS || {};
+QuickJS.jml = new JMLParser();
 
 JMLParser.prototype._addFunction = function (type, expression)
 {
@@ -68,9 +69,9 @@ JMLParser.prototype.getElementById = function (id)
 /* 
  * Parse the input string and create tokens
  */
-JMLParser.prototype.parse = function (jml) 
+JMLParser.prototype.parse = function (input) 
 {
-	this._exp = jml;
+	this._exp = input;
 	this._i = 0;
 	this._line = 1;
 	this._tokens = [];
@@ -159,8 +160,9 @@ JMLParser.prototype.compile = function (root) {
 				continue;
 			} else {
 // 				console.log("create type " + token["DATA"]);
-				element = new window[token["DATA"]] (this, parent);
+				element = new window[token["DATA"]] ();
 				element.type = token["DATA"];
+				element.setParent(parent);
 			}
 		}
 		
@@ -356,7 +358,7 @@ JMLParser.prototype._findAndAddBinding = function (expr, elem, property)
 	if (!this._bindings[object_id][tmpProperty])
 		this._bindings[object_id][tmpProperty] = [];
 	
-	var final_expr = expr.replace(elems[0], "jml.getElementById(\""+elems[0]+"\")");
+	var final_expr = expr.replace(elems[0], "QuickJS.jml.getElementById(\""+elems[0]+"\")");
 	
 	var tmp_binding = [elem, property, final_expr];
 	this._bindings[object_id][tmpProperty][this._bindings[object_id][tmpProperty].length] = tmp_binding;

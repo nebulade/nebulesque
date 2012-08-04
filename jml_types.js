@@ -8,41 +8,35 @@
 function propertyNameToCSS (name) 
 {
 	switch (name) {
-		case "id"	: return "id";
-		case "width"	: return "width";
-		case "height"	: return "height";
 		case "x"	: return "left";
 		case "y"	: return "top";
 		case "color"	: return "background-color";
 		case "source"	: return "background-image";
-		case "position" : return "position";
-		case "opacity"  : return "opacity";
-		default: return "";
+		default: return name;
 	}
 }
 
 /*
  * Main JML HTML Item
  */
-function Item (jml, parent)
+function Item ()
 {
-	if (!jml)
-		return;
-	
 	this.elem = document.createElement("div");
 	this.id = undefined;
-	this.jml = jml;
 	
-	this.parent = parent;
 	this.type = "Item";
 	
-	jml.addProperty(this, "x", 0);
-	jml.addProperty(this, "y", 0);
-	jml.addProperty(this, "width", 0);
-	jml.addProperty(this, "height", 0);
-	jml.addProperty(this, "position", "absolute");
-	jml.addProperty(this, "opacity", 1);
-	
+	QuickJS.jml.addProperty(this, "x", 0);
+	QuickJS.jml.addProperty(this, "y", 0);
+	QuickJS.jml.addProperty(this, "width", 0);
+	QuickJS.jml.addProperty(this, "height", 0);
+	QuickJS.jml.addProperty(this, "position", "absolute");
+	QuickJS.jml.addProperty(this, "opacity", 1);
+}
+
+Item.prototype.setParent = function (parent)
+{
+	this.parent = parent;
 	if (parent && parent.elem)
 		parent.elem.appendChild(this.elem);
 }
@@ -72,13 +66,36 @@ Item.prototype.setProperty = function (property, value)
 	}
 }
 
-
-function Rectangle (jml, parent)
+// Basic Rectangle element
+function Rectangle ()
 {
-	Item.apply(this, arguments);
-	
-	jml.addProperty(this, "color", "");
-	jml.addProperty(this, "border-color", "");
+	QuickJS.jml.addProperty(this, "color", "white");
+	QuickJS.jml.addProperty(this, "border-color", "black");
+	QuickJS.jml.addProperty(this, "border-width", "1");
+	QuickJS.jml.addProperty(this, "border-style", "solid");
 }
+Rectangle.prototype = new Item;
 
-Rectangle.prototype = new Item();
+
+// Basic Text element
+function Text ()
+{
+	this.textElem = document.createTextNode("No Text");
+	this.elem.appendChild(this.textElem);
+	
+	QuickJS.jml.addProperty(this, "color", "white");
+	QuickJS.jml.addProperty(this, "text", "");
+}
+Text.prototype = new Item;
+
+Text.prototype.setProperty = function (property, value)
+{
+	if (property === "color") {
+		this.elem.style["text-color"] = value;
+	} else if (property === "text") {
+		console.log("setText " + value + " old value " + this.textElem.data);
+		this.textElem.data = value;
+	} else {
+		this.elem.style[propertyNameToCSS(property)] = value;
+	}
+}

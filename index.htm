@@ -3,39 +3,38 @@
 		<title> JS Fun </title>
 
 		<script type="text/javascript" src="animation.js"></script>
-		<script type="text/javascript" src="jml_types.js"></script>
 		<script type="text/javascript" src="jml.js"></script>
+		<script type="text/javascript" src="jml_types.js"></script>
 
 		<script type="text/javascript">
 
 		function run() {
-			var anim = new NumberAnimation(jml.getElementById("myImage"), "x", 0, 600, 2000);
+			var anim = new NumberAnimation(QuickJS.jml.getElementById("myImage"), "x", 0, 600, 2000);
 			anim.start();
 		}
 		
 		function changeJMLElement () {
-			var elem = jml.getElementById("greenRect");
+			var elem = QuickJS.jml.getElementById("greenRect");
 			elem.y = document.getElementById("myValue").value;
 		}
 		
 		function animateOpacity () {
-			var anim = new NumberAnimation(jml.getElementById("myImage"), "opacity", jml.getElementById("myImage").opacity, document.getElementById("myOpacity").value, 2000);
+			var anim = new NumberAnimation(QuickJS.jml.getElementById("myImage"), "opacity", QuickJS.jml.getElementById("myImage").opacity, document.getElementById("myOpacity").value, 2000);
 			anim.start();
 		}
 		
 		function compileTextArea() {
-
-			jml.clear();
+			QuickJS.jml.clear();
 			
-			jml.parse(document.getElementById("jml").value);
-// 			jml.dumpTokens();
-			jml.compile(document.getElementById("textareajmlroot"));
-			jml.dumpElements();
+			QuickJS.jml.parse(document.getElementById("jml").value);
+// 			QuickJS.jml.dumpTokens();
+			QuickJS.jml.compile(document.getElementById("textareajmlroot"));
+			QuickJS.jml.dumpElements();
 		}
 
 		function executeFunction() {
-			console.dir(jml.getElementById("myImage2"));
-			jml.getElementById("myImage2").foobar("Test String");
+			console.dir(QuickJS.jml.getElementById("myImage2"));
+			QuickJS.jml.getElementById("myImage2").foobar("Test String");
 		}
 		
 	</script>
@@ -54,6 +53,11 @@ Rectangle {
 	customProperty: 800;
 	opacity: myImage.opacity;
 	onclick: "alert('click')";
+}
+
+Text {
+	id: myText
+	text: "foobar"
 }
 
 Item {
