@@ -104,7 +104,18 @@ Text.prototype.setProperty = function (property, value)
 function MouseArea ()
 {
 	QuickJS.jml.addProperty(this, "containsMouse", false);
-	QuickJS.jml.addProperty(this, "onMouseOver", function() { this.containsMouse = true; });
-	QuickJS.jml.addProperty(this, "onMouseOut", function() { this.containsMouse = false; });
+	
+	var _this = this;
+	this.elem.onmouseover = function () { _this.containsMouse = true; };
+	this.elem.onmouseout = function () { _this.containsMouse = false; };
 }
 MouseArea.prototype = new Item;
+
+MouseArea.prototype.setProperty = function (property, value)
+{
+	if (property === "x" || property === "y" || property === "width" || property === "height" ) {
+		this.elem.style[propertyNameToCSS(property)] = value;
+	} else {
+		this.elem[property] = value;
+	}
+}

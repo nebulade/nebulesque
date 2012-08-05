@@ -46,6 +46,7 @@ Tokenizer.prototype.parse = function (input)
 	this._tokens = [];
 	this._c = this._exp[this._i];
 	this._bindings = [];
+	this._colonOnLine = false;
 	
 	while (this._c) {
 		// check for element name
@@ -67,14 +68,20 @@ Tokenizer.prototype.parse = function (input)
 		if (this._c === '}')
 			this._addToken("SCOPE_END");
 		
-		if (this._c === ':')
+		if (this._c === ':') {
+			this._colonOnLine = true;
 			this._addToken("COLON");
+		}
 		
-		if (this._c === ';')
+		if (this._c === ';') {
+			this._colonOnLine = false;
 			this._addToken("SEMICOLON");
+		}
 
-		if (this._c === '\n')
+		if (this._c === '\n') {
+			this._colonOnLine = false;
 			++this._line;
+		}
 	
 		this._advance();
 	}
@@ -164,7 +171,11 @@ Tokenizer.prototype._parseExpression = function ()
 	var expression = "";
 	
 	while (this._c) {
-		if (this._c === '\n' || this._c === ';' || this._c === ':')
+		if (this._c === '\n' || this._c === ';')
+			break;
+		
+		// only break if this is the first colon in that line
+		if (!this._colonOnLine && this._c === ':')
 			break;
 		
 		// ignore whitespace
@@ -280,7 +291,7 @@ Compiler.prototype.compile = function (content, root) {
 	
 	var tokenizer = new Tokenizer();
 	this._tokens = tokenizer.parse(content);
-	tokenizer.dumpTokens();
+// 	tokenizer.dumpTokens();
 	
 	root.style.visibility = "hidden";
 	
