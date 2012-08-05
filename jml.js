@@ -41,49 +41,71 @@ function Tokenizer () {}
 Tokenizer.prototype.parse = function (input) 
 {
 	this._exp = input;
-	this._i = 0;
+	this._i = -1;
 	this._line = 1;
 	this._tokens = [];
-	this._c = this._exp[this._i];
+	this._c = undefined;//this._exp[this._i];
 	this._bindings = [];
 	this._colonOnLine = false;
+	this._comment = false;
 	
-	while (this._c) {
+	while (this._advance()) {
+		if (this._comment && this._c !== '\n')
+			continue;
+		
+		// check for one line comments
+		if (this._c === '/' && this._exp[this._i+1] === '/') {
+			this._comment = true;
+			continue;
+		}
+		
+		if (this._c === '\n') {
+			this._comment = false;
+			this._colonOnLine = false;
+			++this._line;
+			continue;
+		}
+		
 		// check for element name
-		if (this._c >= 'A' && this._c <= 'Z')
+		if (this._c >= 'A' && this._c <= 'Z') {
 			this._addToken("ELEMENT", this._parseElementName());
+			continue;
+		}
 		
 		if (this._c >= 'a' && this._c <= 'z') {
 			var tmp = this._parseFunction();
-			if (tmp.isFunction)
+			if (tmp.isFunction) {
 				this._addToken("FUNCTION", tmp.content);
+				continue;
+			}
 		}
 		
-		if ((this._c >= 'a' && this._c <= 'z') || (this._c >= '0' && this._c <= '9') || this._c === '"' || this._c === '\'' || this._c === '(')
+		if ((this._c >= 'a' && this._c <= 'z') || (this._c >= '0' && this._c <= '9') || this._c === '"' || this._c === '\'' || this._c === '(') {
 			this._addToken("EXPRESSION", this._parseExpression());
+			continue;
+		}
 		
-		if (this._c === '{')
+		if (this._c === '{') {
 			this._addToken("SCOPE_START");
+			continue;
+		}
 		
-		if (this._c === '}')
+		if (this._c === '}') {
 			this._addToken("SCOPE_END");
+			continue;
+		}
 		
 		if (this._c === ':') {
 			this._colonOnLine = true;
 			this._addToken("COLON");
+			continue;
 		}
 		
 		if (this._c === ';') {
 			this._colonOnLine = false;
 			this._addToken("SEMICOLON");
+			continue;
 		}
-
-		if (this._c === '\n') {
-			this._colonOnLine = false;
-			++this._line;
-		}
-	
-		this._advance();
 	}
 	
 	return this._tokens;
@@ -171,12 +193,16 @@ Tokenizer.prototype._parseExpression = function ()
 	var expression = "";
 	
 	while (this._c) {
-		if (this._c === '\n' || this._c === ';')
+		if (this._c === '\n' || this._c === ';') {
+			this._i -= 1;
 			break;
+		}
 		
 		// only break if this is the first colon in that line
-		if (!this._colonOnLine && this._c === ':')
+		if (!this._colonOnLine && this._c === ':') {
+			this._i -= 1;
 			break;
+		}
 		
 		// ignore whitespace
 		if ((this._c !== '\t' && this._c !== ' ') || expression === "function")
@@ -203,6 +229,7 @@ Tokenizer.prototype.dumpTokens = function ()
 Tokenizer.prototype._advance = function () 
 {
 	this._c = this._exp[++this._i];
+	return (this._c);
 }
 
 
