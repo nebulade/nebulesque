@@ -104,15 +104,19 @@ Text.prototype.setProperty = function (property, value)
 function MouseArea ()
 {
 	QuickJS.jml.addProperty(this, "containsMouse", false);
+	QuickJS.jml.addProperty(this, "pressed", false);
 	
 	var _this = this;
 	this.elem.onmouseover = function () { _this.containsMouse = true; };
 	this.elem.onmouseout = function () { _this.containsMouse = false; };
+	this.elem.onmousedown = function () { _this.pressed = true; };
+	this.elem.onmouseup = function () { _this.pressed = false; };
 }
 MouseArea.prototype = new Item;
 
 MouseArea.prototype.setProperty = function (property, value)
 {
+	console.log("Mousearea set property " + property);
 	if (property === "x" || property === "y" || property === "width" || property === "height" ) {
 		this.elem.style[propertyNameToCSS(property)] = value;
 	} else {
