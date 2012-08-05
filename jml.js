@@ -2,74 +2,43 @@
 
 "use strict";
 
+/*
+ **************************************************
+ * Globals
+ **************************************************
+ */
 var QuickJS = QuickJS || {};
-QuickJS.jml = new JMLParser();
+QuickJS.jml = new Compiler();
+QuickJS.utils = new Utils();
 
-JMLParser.prototype._addFunction = function (type, expression)
-{
-	if (expression == "")
-		return;
-	
-	var name = expression.slice("function ".length, expression.indexOf('('));
-	var func;
-	
-	try {
-		func = eval("(" + expression.replace(name, "") + ")");
-		window[type].prototype[name] = func;
-	} catch (e) {
-		this._compileError("cannot create member function " + name);
-	}
-}
 
-JMLParser.prototype.addProperty = function (element, property, initialValue) 
-{
-	var _value = initialValue;
-	var _this = this;
-	var _property = property;
-	var _element = element;
-	
-	if (window[_element.type].prototype.setProperty !== undefined)
-		window[_element.type].prototype.setProperty.call(_element, _property, _value);
-	
-	Object.defineProperty(_element, _property, {
-		get: function() { return _value; },
-		set: function(val) {
-			if (_value == val)
-				return;
-			_value = val;
-			if (window[_element.type].prototype.setProperty !== undefined)
-				window[_element.type].prototype.setProperty.call(_element, _property, _value);
-			_this._notifyPropertyChange(_element, _property);
-			
-// 			console.log("set property " + _property + " to value " + _value);
-			      }
-	});
-}
+/*
+ **************************************************
+ * Utils
+ **************************************************
+ */
+function Utils () {}
 
 /* 
- * JMLParser constructor
+ * check if character is actual an alphanumeric one
  */
-function JMLParser () 
+Utils.prototype.isAlphaNumeric = function (c)
 {
-	this._c = '';
-	this._exp = '';
-	this._i = 0;
-	this._line = 1;
-	this._tokens = [];
-	// bindings table ["binding id" -> objectID.objectID.property][expression]
-	this._bindings = [];
-	this._elements = [];
+	return ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'));
 }
 
-JMLParser.prototype.getElementById = function (id)
-{
-	return this._elements[id];
-}
+
+/*
+ **************************************************
+ * Tokenizer
+ **************************************************
+ */
+function Tokenizer () {}
 
 /* 
  * Parse the input string and create tokens
  */
-JMLParser.prototype.parse = function (input) 
+Tokenizer.prototype.parse = function (input) 
 {
 	this._exp = input;
 	this._i = 0;
@@ -107,25 +76,194 @@ JMLParser.prototype.parse = function (input)
 		if (this._c === '\n')
 			++this._line;
 	
-		this._tokenizerAdvance();
+		this._advance();
 	}
 	
+	return this._tokens;
+}
+
+/* 
+ * add a found token to the token table
+ */
+Tokenizer.prototype._addToken = function (type, data) 
+{
+	this._tokens.push( {"TOKEN" : type, "DATA" : data, "LINE" : this._line} );
+}
+
+/* 
+ * extract an element name
+ */
+Tokenizer.prototype._parseElementName = function () 
+{
+	var token = "";
 	
+	while (this._c) {
+		if ((this._c >= 'A' && this._c <= 'Z') || (this._c >= 'a' && this._c <= 'z'))
+			token += this._c;
+		else
+			break;
+		
+		this._advance();
+	}
+	
+	return token;
+}
+
+/* 
+ * extract a function
+ */
+Tokenizer.prototype._parseFunction = function ()
+{
+	var i_save = this._i;
+	var token = "";
+	var scope = 0;
+	var ret = {};
+	ret.isFunction = false;
+	ret.content = "";
+	
+	while (this._c) {
+		if (token === "function ") 
+			ret.isFunction = true;
+		
+		if (ret.isFunction) {
+			if (this._c === '{') {
+				scope += 1;
+			} else if (this._c === '}') {
+				scope -= 1;
+				if (!scope) {
+					// consume last } and advance tokenizer before returning;
+					token += this._c;
+					this._advance();
+					ret.content = token;
+					return ret;
+				}
+			}
+			token += this._c;
+		} else {
+			if (QuickJS.utils.isAlphaNumeric(this._c) || this._c === ' ')
+				token += this._c;
+			else
+				break;
+		}
+		
+		this._advance();
+	}
+	
+	// no function found so restore 
+	this._i = i_save-1;
+	this._advance();
+	
+	return ret;
+}
+
+/* 
+ * extract an expression, can be a property definition, function or right side expression after :
+ */
+Tokenizer.prototype._parseExpression = function () 
+{
+	var expression = "";
+	
+	while (this._c) {
+		if (this._c === '\n' || this._c === ';' || this._c === ':')
+			break;
+		
+		// ignore whitespace
+		if ((this._c !== '\t' && this._c !== ' ') || expression === "function")
+			expression += this._c;
+		
+		this._advance();
+	}
+	
+	return expression;
 }
 
 /* 
  * Print all found tokens on the console 
  */
-JMLParser.prototype.dumpTokens = function () 
+Tokenizer.prototype.dumpTokens = function () 
 {
 	for (var i = 0; i < this._tokens.length; ++i)
 		console.log("TOKEN: " + this._tokens[i]["TOKEN"] + " " + (this._tokens[i]["DATA"] ? this._tokens[i]["DATA"] : ""));
 }
 
 /* 
+ * Convenience function to advance the current tokenizer character
+ */
+Tokenizer.prototype._advance = function () 
+{
+	this._c = this._exp[++this._i];
+}
+
+
+
+
+/*
+ **************************************************
+ * Compiler
+ **************************************************
+ */
+function Compiler () 
+{
+	this._c = '';
+	this._exp = '';
+	this._i = 0;
+	this._line = 1;
+	this._tokens = [];
+	// bindings table ["binding id" -> objectID.objectID.property][expression]
+	this._bindings = [];
+	this._elements = [];
+}
+
+Compiler.prototype.addFunction = function (type, expression)
+{
+	if (expression == "")
+		return;
+	
+	var name = expression.slice("function ".length, expression.indexOf('('));
+	var func;
+	
+	try {
+		func = eval("(" + expression.replace(name, "") + ")");
+		window[type].prototype[name] = func;
+	} catch (e) {
+		this._compileError("cannot create member function " + name);
+	}
+}
+
+Compiler.prototype.addProperty = function (element, property, initialValue) 
+{
+	var _value = initialValue;
+	var _this = this;
+	var _property = property;
+	var _element = element;
+	
+	if (window[_element.type].prototype.setProperty !== undefined)
+		window[_element.type].prototype.setProperty.call(_element, _property, _value);
+	
+	Object.defineProperty(_element, _property, {
+		get: function() { return _value; },
+		set: function(val) {
+			if (_value == val)
+				return;
+			_value = val;
+			if (window[_element.type].prototype.setProperty !== undefined)
+				window[_element.type].prototype.setProperty.call(_element, _property, _value);
+			_this._notifyPropertyChange(_element, _property);
+			
+// 			console.log("set property " + _property + " to value " + _value);
+			      }
+	});
+}
+
+Compiler.prototype.getElementById = function (id)
+{
+	return this._elements[id];
+}
+
+/* 
  * Print all elements on the console 
  */
-JMLParser.prototype.dumpElements = function () 
+Compiler.prototype.dumpElements = function () 
 {
 	for (var element_id in this._elements)
 		console.dir(this._elements[element_id]);
@@ -133,13 +271,16 @@ JMLParser.prototype.dumpElements = function ()
 
 /* 
  * Take all tokens and compile it to real elements with properties and bindings
- *  TODO cannot handle nested elements...very easy to add I just didn't bother
  */
-JMLParser.prototype.compile = function (root) {
+Compiler.prototype.compile = function (content, root) {
 	if (!root) {
 		console.log("Please specify a JML root element");
 		return;
 	}
+	
+	var tokenizer = new Tokenizer();
+	this._tokens = tokenizer.parse(content);
+	tokenizer.dumpTokens();
 	
 	root.style.visibility = "hidden";
 	
@@ -220,7 +361,7 @@ JMLParser.prototype.compile = function (root) {
 		}
 		
 		if (token["TOKEN"] === "FUNCTION")
-			this._addFunction(element.type, token["DATA"]);
+			this.addFunction(element.type, token["DATA"]);
 	}
 	
 	// run all bindings once
@@ -245,7 +386,7 @@ JMLParser.prototype.compile = function (root) {
  * clears internal objects
  *  TODO: check if elements are not referenced anymore?
  */
-JMLParser.prototype.clear = function ()
+Compiler.prototype.clear = function ()
 {
 	for (var element_id in this._elements) {
 		console.log(element_id);
@@ -257,19 +398,12 @@ JMLParser.prototype.clear = function ()
 	this._elements = [];
 }
 
-/* 
- * Tokenizer: Convenience function to advance the current tokenizer character
- */
-JMLParser.prototype._tokenizerAdvance = function () 
-{
-	this._c = this._exp[++this._i];
-}
 
 /* 
  * Slot to handle a property change and evaluate the associated bindings
  *  TODO: there might be multiple bindings to the property
  */
-JMLParser.prototype._notifyPropertyChange = function (elem, property) 
+Compiler.prototype._notifyPropertyChange = function (elem, property) 
 {
 // 	console.log("notification for binding " + elem.id + " property " + property);
 	
@@ -288,25 +422,9 @@ JMLParser.prototype._notifyPropertyChange = function (elem, property)
 }
 
 /* 
- * Tokenizer: add a found token to the token table
- */
-JMLParser.prototype._addToken = function (type, data) 
-{
-	this._tokens.push( {"TOKEN" : type, "DATA" : data, "LINE" : this._line} );
-}
-
-/* 
- * Tokenizer: check if character is actual an alphanumeric one
- */
-JMLParser.prototype._checkAlphaNumeric = function (c)
-{
-	return ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'));
-}
-
-/* 
  * print syntax error
  */
-JMLParser.prototype._syntaxError = function (message) 
+Compiler.prototype._syntaxError = function (message) 
 {
 	console.log("Syntax error on line " + this._line + ": " + message);
 }
@@ -314,7 +432,7 @@ JMLParser.prototype._syntaxError = function (message)
 /* 
  * print compile error
  */
-JMLParser.prototype._compileError = function (message, l) 
+Compiler.prototype._compileError = function (message, l) 
 {
 	console.log("Compile error on line " + l + ": " + message);
 }
@@ -323,7 +441,7 @@ JMLParser.prototype._compileError = function (message, l)
  * Find a binding in a expression token 
  *  TODO: This currently only handles single bindings without complex expressions
  */
-JMLParser.prototype._findAndAddBinding = function (expr, elem, property) 
+Compiler.prototype._findAndAddBinding = function (expr, elem, property) 
 {
 	if (expr.length == 0)
 		return false;
@@ -338,7 +456,7 @@ JMLParser.prototype._findAndAddBinding = function (expr, elem, property)
 		if (expr[i] == '.' ) {
 			elems[elems.length] = tmpProperty;
 			tmpProperty = "";
-		} else if (this._checkAlphaNumeric(expr[i])) {
+		} else if (QuickJS.utils.isAlphaNumeric(expr[i])) {
 			tmpProperty += expr[i];
 		} else {
 			break;
@@ -366,88 +484,4 @@ JMLParser.prototype._findAndAddBinding = function (expr, elem, property)
 // 	console.log("Add binding: " + elem.id + "." + property + " with expression " + final_expr + " binding count " + this._bindings[object_id][tmpProperty].length);
 	
 	return true;
-}
-
-/* 
- * Tokenizer: extract an element name
- */
-JMLParser.prototype._parseElementName = function () 
-{
-	var token = "";
-	
-	while (this._c) {
-		if ((this._c >= 'A' && this._c <= 'Z') || (this._c >= 'a' && this._c <= 'z'))
-			token += this._c;
-		else
-			break;
-		
-		this._tokenizerAdvance();
-	}
-	
-	return token;
-}
-
-JMLParser.prototype._parseFunction = function ()
-{
-	var i_save = this._i;
-	var token = "";
-	var scope = 0;
-	var ret = {};
-	ret.isFunction = false;
-	ret.content = "";
-	
-	while (this._c) {
-		if (token === "function ") 
-			ret.isFunction = true;
-		
-		if (ret.isFunction) {
-			if (this._c === '{') {
-				scope += 1;
-			} else if (this._c === '}') {
-				scope -= 1;
-				if (!scope) {
-					// consume last } and advance tokenizer before returning;
-					token += this._c;
-					this._tokenizerAdvance();
-					ret.content = token;
-					return ret;
-				}
-			}
-			token += this._c;
-		} else {
-			if (this._checkAlphaNumeric(this._c) || this._c === ' ')
-				token += this._c;
-			else
-				break;
-		}
-		
-		this._tokenizerAdvance();
-	}
-	
-	// no function found so restore 
-	this._i = i_save-1;
-	this._tokenizerAdvance();
-	
-	return ret;
-}
-
-/* 
- * Tokenizer: extract an expression, can be a property definition, function or right side expression after :
- */
-JMLParser.prototype._parseExpression = function () 
-{
-	var expression = "";
-	
-	while (this._c) {
-		if (this._c === '\n' || this._c === ';' || this._c === ':')
-			break;
-		
-		// ignore whitespace
-		if ((this._c !== '\t' && this._c !== ' ') || expression === "function")
-			expression += this._c;
-		
-		this._tokenizerAdvance();
-	}
-	
-	return expression;
 }

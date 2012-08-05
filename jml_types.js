@@ -99,3 +99,12 @@ Text.prototype.setProperty = function (property, value)
 		this.elem.style[propertyNameToCSS(property)] = value;
 	}
 }
+
+// Basic MouseArea element
+function MouseArea ()
+{
+	QuickJS.jml.addProperty(this, "containsMouse", false);
+	QuickJS.jml.addProperty(this, "onMouseOver", function() { this.containsMouse = true; });
+	QuickJS.jml.addProperty(this, "onMouseOut", function() { this.containsMouse = false; });
+}
+MouseArea.prototype = new Item;
