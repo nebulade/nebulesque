@@ -8,10 +8,7 @@
 
 		<script type="text/javascript">
 
-		function run() {
-			var anim = new NumberAnimation(QuickJS.jml.getElementById("myImage"), "x", 0, 600, 2000);
-			anim.start();
-		}
+		var anim = undefined;
 		
 		function changeJMLElement () {
 			var elem = QuickJS.jml.getElementById("greenRect");
@@ -19,8 +16,8 @@
 		}
 		
 		function animateOpacity () {
-			var anim = new NumberAnimation(QuickJS.jml.getElementById("myImage"), "opacity", QuickJS.jml.getElementById("myImage").opacity, document.getElementById("myOpacity").value, 2000);
-			anim.start();
+			var anim2 = new NumberAnimation(QuickJS.jml.getElementById("myImage"), "opacity", QuickJS.jml.getElementById("myImage").opacity, document.getElementById("myOpacity").value, 2000);
+			anim2.start();
 		}
 		
 		function compileTextArea() {
@@ -28,17 +25,23 @@
 			
 			QuickJS.jml.compile(document.getElementById("jml").value, document.getElementById("textareajmlroot"));
 			QuickJS.jml.dumpElements();
+                        
+                        anim = new NumberAnimation(QuickJS.jml.getElementById("myImage"), "x", 0, 600, 2000, -1);
 		}
 
 		function executeFunction() {
 			console.dir(QuickJS.jml.getElementById("myImage2"));
 			QuickJS.jml.getElementById("myImage2").foobar("Test String");
 		}
+                
+                function onload() {
+                
+                }
 		
 	</script>
 
 	</head>
-	<body>
+	<body onload="onload()">
 	
 	<textarea id="jml" rows=20 cols=80>
 Rectangle {
@@ -111,7 +114,8 @@ Item {
 	<a href="JavaScript: compileTextArea();">Compile</a><br/>
 	<input type="text" id="myValue" value="100"/><a href="JavaScript: changeJMLElement();">Change y of greenRect</a><br/>
 	<input type="text" id="myOpacity" value="0"/><a href="JavaScript: animateOpacity();">Animate opacity of myImage</a><br/>
-	<a href="JavaScript: run();">start Animation</a><br/>
+	<a href="JavaScript: anim.start();">start Animation</a><br/>
+        <a href="JavaScript: anim.stop();">stop Animation</a><br/>
 	<a href="JavaScript: executeFunction();">execute the function foobar("Test String") on myImage2</a><br/>
 	
 	<jmlobject id="textareajmlroot">
