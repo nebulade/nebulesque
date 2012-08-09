@@ -11,7 +11,6 @@ var QuickJS = QuickJS || {};
 QuickJS.jml = new Compiler();
 QuickJS.utils = new Utils();
 
-
 /*
  **************************************************
  * Utils
@@ -26,7 +25,6 @@ Utils.prototype.isAlphaNumeric = function (c)
 {
 	return ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'));
 }
-
 
 /*
  **************************************************
@@ -408,11 +406,7 @@ Compiler.prototype.compile = function (content, root) {
 		for (property in element) {
 			for (var i = 0; i < element[property].length; ++i) {
 				var binding = this._bindings[element_id][property][i];
-				try {
-					binding[0][binding[1]] = eval(binding[2]);
-				} catch (e) {
-					this._compileError("error evaluating binding expression: " + e, -1);
-				}
+				binding[0][binding[1]] = binding[2]();
 			}
 		}
 	}
@@ -454,7 +448,7 @@ Compiler.prototype._notifyPropertyChange = function (elem, property)
 	// run over all assigned bindings
 	for (var i = 0; i < this._bindings[elem.id][property].length; ++i) {
 		var binding = this._bindings[elem.id][property][i];
-		binding[0][binding[1]] = eval(binding[2]);
+                binding[0][binding[1]] = binding[2]();
 		// console.log("eval expr: |" + binding[2] + "|");
 	}
 }
@@ -516,7 +510,9 @@ Compiler.prototype._findAndAddBinding = function (expr, elem, property)
 	
 	var final_expr = expr.replace(elems[0], "QuickJS.jml.getElementById(\""+elems[0]+"\")");
 	
-	var tmp_binding = [elem, property, final_expr];
+        var func = eval("(function() { var tmp = "+final_expr+"; return tmp; })");
+        
+	var tmp_binding = [elem, property, func];
 	this._bindings[object_id][tmpProperty][this._bindings[object_id][tmpProperty].length] = tmp_binding;
 	
 // 	console.log("Add binding: " + elem.id + "." + property + " with expression " + final_expr + " binding count " + this._bindings[object_id][tmpProperty].length);
