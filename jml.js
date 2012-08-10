@@ -491,7 +491,8 @@ Compiler.prototype._findAndAddBinding = function (expr, elem, property)
 		} else if (QuickJS.utils.isAlphaNumeric(expr[i])) {
 			tmpProperty += expr[i];
 		} else {
-			break;
+            if (tmpProperty != "")
+                break
 		}
 	}
 	

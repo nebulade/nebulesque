@@ -1,0 +1,52 @@
+<html>
+	<head>
+		<title> JS Fun </title>
+
+		<script type="text/javascript" src="animation.js"></script>
+		<script type="text/javascript" src="jml.js"></script>
+		<script type="text/javascript" src="jml_types.js"></script>
+
+		<script type="text/javascript">
+
+		function onload () {
+			QuickJS.jml.clear();
+			
+			QuickJS.jml.compile(document.getElementById("jml").value, document.getElementById("textareajmlroot"));
+			QuickJS.jml.dumpElements();
+		}
+
+        </script>
+
+	</head>
+	<body onload="onload()">
+
+
+    <a href="JavaScript: onload();">Compile</a><br/>
+
+	<textarea id="jml" rows=20 cols=155>
+Rectangle {
+    id: button;
+    width: 73;
+    height: 32;
+    x: 900;
+    y: 50;
+    onclick: "console.log('click')";
+    border-width: 0
+    source: (ma.changed || !ma.changed) ? ma.pressed ? "url(button2.png)" : ma.containsMouse ? "url(button3.png)" : "url(button1.png)" : ""
+    source: "url(button1.png)"
+
+    MouseArea {
+        id: ma;
+        width: button.width;
+        height: button.height;
+    }
+}
+	</textarea>
+	<br/>
+	
+	<jmlobject id="textareajmlroot">
+	</jmlobject>
+		
+	</body>
+</html>
+
