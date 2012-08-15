@@ -325,6 +325,8 @@ Compiler.prototype.compile = function (content, root) {
 	var parent = {"elem": root};
 	var property = "";
 	var token_length = this._tokens.length;
+
+	parent.children = [];
 	
 	for (var i = 0; i < token_length; i += 1) {
 		var token = this._tokens[i];
@@ -340,6 +342,8 @@ Compiler.prototype.compile = function (content, root) {
 				element = new window[token["DATA"]] ();
 				element.type = token["DATA"];
 				element.setParent(parent);
+				element.children = [];
+				parent.children[parent.children.length] = element;
 			}
 		}
 		
@@ -400,6 +404,9 @@ Compiler.prototype.compile = function (content, root) {
 			this.addFunction(element.type, token["DATA"]);
 	}
 	
+	// attach all objects which are in scope of each element
+	this._attachObjectsInScope(parent);
+	
 	// run all bindings once
 	for (var element_id in this._bindings) {
 		var element = this._bindings[element_id];
@@ -412,6 +419,29 @@ Compiler.prototype.compile = function (content, root) {
 	}
 	
 	root.style.visibility = "visible";
+}
+
+Compiler.prototype._attachObjectsInScope = function(element)  {
+//	console.log("attach objects for: " + element.id);
+	
+	// add parents
+	var elem = element;
+	while(elem.parent !== undefined && elem.parent.id !== undefined) {
+//		console.log("attach parent " + elem.parent.id + " for: " + element.id);
+		element[elem.parent.id] = elem.parent;
+		elem = elem.parent;
+	}
+	
+	// add siblings
+	for (var i = 0; i < element.children.length; ++i) {
+		for (var j = 0; j < element.children.length; ++j) {
+			if (element.children[j] === element.children[i])
+				continue;
+			
+			element.children[i][element.children[j].id] = element.children[j];
+		}
+		Compiler.prototype._attachObjectsInScope(element.children[i]);
+	}
 }
 
 /* 

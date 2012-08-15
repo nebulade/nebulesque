@@ -24,22 +24,34 @@
     <a href="JavaScript: onload();">Compile</a><br/>
 
 	<textarea id="jml" rows=20 cols=155>
-Rectangle {
-    id: button;
-    width: 73;
-    height: 32;
-    x: 900;
-    y: 50;
-    onclick: "console.log('click')";
-    border-width: 0
-    source: (ma.changed || !ma.changed) ? ma.pressed ? "url(button2.png)" : ma.containsMouse ? "url(button3.png)" : "url(button1.png)" : ""
-    source: "url(button1.png)"
+Item {
+	id: myRoot;
+	width: 73;
+	height: 32;
+	x: 900;
+	y: 50;
 
-    MouseArea {
-        id: ma;
-        width: button.width;
-        height: button.height;
-    }
+	Item {
+		id: firstRect
+		width: 200
+		height: 200
+	}
+	
+	Item {
+		id: secondRect
+	}
+	
+	Item {
+		id: thirdRect
+		
+		Item {
+			id: firstInthirdRect
+		}
+		
+		Item {
+			id: secondInthirdRect
+		}
+	}
 }
 	</textarea>
 	<br/>
