@@ -5,8 +5,7 @@
 /* 
  * Convert JML property names to css names
  */
-function propertyNameToCSS (name) 
-{
+function propertyNameToCSS (name) {
 	switch (name) {
 		case "x"	: return "left";
 		case "y"	: return "top";
@@ -19,8 +18,7 @@ function propertyNameToCSS (name)
 /*
  * Main JML HTML Item
  */
-function Item ()
-{
+function Item () {
 	this.elem = document.createElement("div");
 	this.id = undefined;
 	
@@ -34,15 +32,13 @@ function Item ()
 	QuickJS.jml.addProperty(this, "opacity", 1);
 }
 
-Item.prototype.setParent = function (parent)
-{
+Item.prototype.setParent = function (parent) {
 	this.parent = parent;
 	if (parent && parent.elem)
 		parent.elem.appendChild(this.elem);
 }
 
-Item.prototype.setId = function (id)
-{
+Item.prototype.setId = function (id) {
 	this.id = id;
 	this.elem.id = id;
 }
@@ -52,8 +48,7 @@ Item.prototype.delete = function ()
 	this.parent.elem.removeChild(this.elem);
 }
 
-Item.prototype.setProperty = function (property, value)
-{
+Item.prototype.setProperty = function (property, value) {
 	if (property == "onclick") {
 		try {
 			var func = eval("(function () {" + value + "})");
@@ -67,8 +62,7 @@ Item.prototype.setProperty = function (property, value)
 }
 
 // Basic Rectangle element
-function Rectangle ()
-{
+function Rectangle () {
 	QuickJS.jml.addProperty(this, "color", "white");
 	QuickJS.jml.addProperty(this, "border-color", "black");
 	QuickJS.jml.addProperty(this, "border-width", "1");
@@ -78,8 +72,7 @@ Rectangle.prototype = new Item;
 
 
 // Basic Text element
-function Text ()
-{
+function Text () {
 	this.textElem = document.createTextNode("No Text");
 	this.elem.appendChild(this.textElem);
 	
@@ -88,8 +81,7 @@ function Text ()
 }
 Text.prototype = new Item;
 
-Text.prototype.setProperty = function (property, value)
-{
+Text.prototype.setProperty = function (property, value) {
 	if (property === "color") {
 		this.elem.style["text-color"] = value;
 	} else if (property === "text") {
@@ -101,8 +93,7 @@ Text.prototype.setProperty = function (property, value)
 }
 
 // Basic MouseArea element
-function MouseArea ()
-{
+function MouseArea () {
 	QuickJS.jml.addProperty(this, "containsMouse", false);
 	QuickJS.jml.addProperty(this, "pressed", false);
     QuickJS.jml.addProperty(this, "changed", false);
@@ -115,8 +106,7 @@ function MouseArea ()
 }
 MouseArea.prototype = new Item;
 
-MouseArea.prototype.setProperty = function (property, value)
-{
+MouseArea.prototype.setProperty = function (property, value) {
 //	console.log("Mousearea set property " + property);
 	if (property === "x" || property === "y" || property === "width" || property === "height" ) {
 		this.elem.style[propertyNameToCSS(property)] = value;

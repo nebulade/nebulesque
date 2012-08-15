@@ -21,8 +21,7 @@ function Utils () {}
 /* 
  * check if character is actual an alphanumeric one
  */
-Utils.prototype.isAlphaNumeric = function (c)
-{
+Utils.prototype.isAlphaNumeric = function (c) {
 	return ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'));
 }
 
@@ -36,8 +35,7 @@ function Tokenizer () {}
 /* 
  * Parse the input string and create tokens
  */
-Tokenizer.prototype.parse = function (input) 
-{
+Tokenizer.prototype.parse = function (input) {
 	this._exp = input;
 	this._i = -1;
 	this._line = 1;
@@ -112,16 +110,14 @@ Tokenizer.prototype.parse = function (input)
 /* 
  * add a found token to the token table
  */
-Tokenizer.prototype._addToken = function (type, data) 
-{
+Tokenizer.prototype._addToken = function (type, data) {
 	this._tokens.push( {"TOKEN" : type, "DATA" : data, "LINE" : this._line} );
 }
 
 /* 
  * extract an element name
  */
-Tokenizer.prototype._parseElementName = function () 
-{
+Tokenizer.prototype._parseElementName = function () {
 	var token = "";
 	
 	while (this._c) {
@@ -139,8 +135,7 @@ Tokenizer.prototype._parseElementName = function ()
 /* 
  * extract a function
  */
-Tokenizer.prototype._parseFunction = function ()
-{
+Tokenizer.prototype._parseFunction = function () {
 	var i_save = this._i;
 	var token = "";
 	var scope = 0;
@@ -186,8 +181,7 @@ Tokenizer.prototype._parseFunction = function ()
 /* 
  * extract an expression, can be a property definition, function or right side expression after :
  */
-Tokenizer.prototype._parseExpression = function () 
-{
+Tokenizer.prototype._parseExpression = function () {
 	var expression = "";
 	
 	while (this._c) {
@@ -215,8 +209,7 @@ Tokenizer.prototype._parseExpression = function ()
 /* 
  * Print all found tokens on the console 
  */
-Tokenizer.prototype.dumpTokens = function () 
-{
+Tokenizer.prototype.dumpTokens = function () {
 	for (var i = 0; i < this._tokens.length; ++i)
 		console.log("TOKEN: " + this._tokens[i]["TOKEN"] + " " + (this._tokens[i]["DATA"] ? this._tokens[i]["DATA"] : ""));
 }
@@ -224,8 +217,7 @@ Tokenizer.prototype.dumpTokens = function ()
 /* 
  * Convenience function to advance the current tokenizer character
  */
-Tokenizer.prototype._advance = function () 
-{
+Tokenizer.prototype._advance = function () {
 	this._c = this._exp[++this._i];
 	return (this._c);
 }
@@ -238,8 +230,7 @@ Tokenizer.prototype._advance = function ()
  * Compiler
  **************************************************
  */
-function Compiler () 
-{
+function Compiler () {
 	this._c = '';
 	this._exp = '';
 	this._i = 0;
@@ -250,8 +241,7 @@ function Compiler ()
 	this._elements = [];
 }
 
-Compiler.prototype.addFunction = function (type, expression)
-{
+Compiler.prototype.addFunction = function (type, expression) {
 	if (expression == "")
 		return;
 	
@@ -266,8 +256,7 @@ Compiler.prototype.addFunction = function (type, expression)
 	}
 }
 
-Compiler.prototype.addProperty = function (element, property, initialValue) 
-{
+Compiler.prototype.addProperty = function (element, property, initialValue) {
 	var _value = initialValue;
 	var _this = this;
 	var _property = property;
@@ -291,16 +280,14 @@ Compiler.prototype.addProperty = function (element, property, initialValue)
 	});
 }
 
-Compiler.prototype.getElementById = function (id)
-{
+Compiler.prototype.getElementById = function (id) {
 	return this._elements[id];
 }
 
 /* 
  * Print all elements on the console 
  */
-Compiler.prototype.dumpElements = function () 
-{
+Compiler.prototype.dumpElements = function () {
 	for (var element_id in this._elements)
 		console.dir(this._elements[element_id]);
 }
@@ -421,7 +408,7 @@ Compiler.prototype.compile = function (content, root) {
 	root.style.visibility = "visible";
 }
 
-Compiler.prototype._attachObjectsInScope = function(element)  {
+Compiler.prototype._attachObjectsInScope = function(element) {
 //	console.log("attach objects for: " + element.id);
 	
 	// add parents
@@ -448,8 +435,7 @@ Compiler.prototype._attachObjectsInScope = function(element)  {
  * clears internal objects
  *  TODO: check if elements are not referenced anymore?
  */
-Compiler.prototype.clear = function ()
-{
+Compiler.prototype.clear = function () {
 	for (var element_id in this._elements) {
 		console.log(element_id);
 		var element = this._elements[element_id];
@@ -465,8 +451,7 @@ Compiler.prototype.clear = function ()
  * Slot to handle a property change and evaluate the associated bindings
  *  TODO: there might be multiple bindings to the property
  */
-Compiler.prototype._notifyPropertyChange = function (elem, property) 
-{
+Compiler.prototype._notifyPropertyChange = function (elem, property) {
 // 	console.log("notification for binding " + elem.id + " property " + property);
 	
 	if (this._bindings[elem.id] == undefined)
@@ -486,16 +471,14 @@ Compiler.prototype._notifyPropertyChange = function (elem, property)
 /* 
  * print syntax error
  */
-Compiler.prototype._syntaxError = function (message) 
-{
+Compiler.prototype._syntaxError = function (message) {
 	console.log("Syntax error on line " + this._line + ": " + message);
 }
 
 /* 
  * print compile error
  */
-Compiler.prototype._compileError = function (message, l) 
-{
+Compiler.prototype._compileError = function (message, l) {
 	console.log("Compile error on line " + l + ": " + message);
 }
 
@@ -503,8 +486,7 @@ Compiler.prototype._compileError = function (message, l)
  * Find a binding in a expression token 
  *  TODO: This currently only handles single bindings without complex expressions
  */
-Compiler.prototype._findAndAddBinding = function (expr, elem, property) 
-{
+Compiler.prototype._findAndAddBinding = function (expr, elem, property) {
 	if (expr.length == 0)
 		return false;
 	
