@@ -400,7 +400,7 @@ Compiler.prototype.compile = function (content, root) {
 		for (property in element) {
 			for (var i = 0; i < element[property].length; ++i) {
 				var binding = this._bindings[element_id][property][i];
-				binding[0][binding[1]] = binding[2]();
+				//binding[0][binding[1]] = binding[2].call(binding[0]);
 			}
 		}
 	}
@@ -463,7 +463,7 @@ Compiler.prototype._notifyPropertyChange = function (elem, property) {
 	// run over all assigned bindings
 	for (var i = 0; i < this._bindings[elem.id][property].length; ++i) {
 		var binding = this._bindings[elem.id][property][i];
-                binding[0][binding[1]] = binding[2]();
+                binding[0][binding[1]] = binding[2].call(elem);
 		// console.log("eval expr: |" + binding[2] + "|");
 	}
 }
@@ -521,14 +521,20 @@ Compiler.prototype._findAndAddBinding = function (expr, elem, property) {
 	if (!this._bindings[object_id][tmpProperty])
 		this._bindings[object_id][tmpProperty] = [];
 	
-	var final_expr = expr.replace(elems[0], "QuickJS.jml.getElementById(\""+elems[0]+"\")");
+	//var final_expr = expr.replace(elems[0], "QuickJS.jml.getElementById(\""+elems[0]+"\")");
+	var final_expr = expr.replace(/\$/g, "this.");
 	
-        var func = eval("(function() { var tmp = "+final_expr+"; return tmp; })");
-        
-	var tmp_binding = [elem, property, func];
-	this._bindings[object_id][tmpProperty][this._bindings[object_id][tmpProperty].length] = tmp_binding;
+	console.log("Add binding: " + elem.id + "." + property + " with expression " + final_expr + " binding count " + this._bindings[object_id][tmpProperty].length);
 	
-// 	console.log("Add binding: " + elem.id + "." + property + " with expression " + final_expr + " binding count " + this._bindings[object_id][tmpProperty].length);
+	try {
+		//var func = eval("(function() { var tmp = "+final_expr+"; return tmp; })");
+		var func = eval("(function() { " + final_expr + "})");
+		
+		var tmp_binding = [elem, property, func];
+		this._bindings[object_id][tmpProperty][this._bindings[object_id][tmpProperty].length] = tmp_binding;
+	} catch (e) {
+		console.log("cannot create function pointer for binding" + e);
+	}
 	
 	return true;
 }
