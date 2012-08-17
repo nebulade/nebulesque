@@ -11,6 +11,7 @@ var QuickJS = QuickJS || {};
 QuickJS.tokenizer = new Tokenizer();
 QuickJS.utils = new Utils();
 QuickJS.parser = new Parser();
+QuickJS.engine = new Engine();
 
 /*
  **************************************************
@@ -236,11 +237,7 @@ Tokenizer.prototype._advance = function () {
  * Parser
  **************************************************
  */
-function Parser () {
-	this._i = 0;
-	this._line = 1;
-	this._tokens = [];
-}
+function Parser () {}
 
 /* 
  * Take all tokens and compile them to a object tree and return the root
@@ -252,12 +249,13 @@ Parser.prototype.parse = function (tokens) {
 	
 	var element = undefined;
 	var parent = {};
+	// magic root type
+	parent.type = "root";
+	parent.children = [];
 	var property = "";
 	
 	// just cache the token count
 	var token_length = this._tokens.length;
-
-	parent.children = [];
 	
 	for (var i = 0; i < token_length; i += 1) {
 		var token = this._tokens[i];
@@ -269,7 +267,7 @@ Parser.prototype.parse = function (tokens) {
 				i += 1;
 				continue;
 			} else {
-				console.log("create type " + token["DATA"]);
+// 				console.log("create type " + token["DATA"]);
 				element = {};
 				element.type = token["DATA"];
 				element.parent = parent;
@@ -279,12 +277,15 @@ Parser.prototype.parse = function (tokens) {
 		}
 		
 		if (token["TOKEN"] === "SCOPE_START") {
+// 			console.log("scope start, old parent " + parent.type + " new parent " + element.type);
 			element.parent = parent;
 			parent = element;
 		}
 		
 		if (token["TOKEN"] === "SCOPE_END") {
+// 			console.log("scope end, old parent " + parent.type + " new parent " + element.parent.type);
 			parent = element.parent;
+			element = element.parent;
 		}
 		
 		if (token["TOKEN"] === "EXPRESSION") {
@@ -308,4 +309,97 @@ Parser.prototype.parse = function (tokens) {
 	}
 	
 	return parent;
+}
+
+
+
+
+
+
+/*
+ **************************************************
+ * Engine
+ **************************************************
+ */
+function Engine () {}
+
+Engine.prototype.createElements = function (object_tree, root_element) {
+	if (object_tree === undefined || object_tree.type === undefined || object_tree.type !== "root") {
+		console.log("not a valid object tree...first element must be of type 'root'");
+		return;
+	}
+	
+	// create bare elements with only the type, id and parent/child relationship
+	for (var i = 0; i < object_tree.children.length; ++i) {
+		this._createElementsTreeFromObjectTree(object_tree.children[i], root_element);
+	}
+}
+
+Engine.prototype._createElementsTreeFromObjectTree = function (object_tree, parent) {
+	// TODO use actual uuids 
+	if (object_tree.id === undefined)
+		object_tree.id = "Item"+Math.random();
+	
+// 	console.dir(object_tree);
+	
+	var element = this.createElement(object_tree.type, object_tree.id, parent);
+	
+	for (var property in object_tree) {
+		if (!object_tree.hasOwnProperty(property))
+			continue;
+		if (property === "id" || property === "parent" || property === "children" || property === "type")
+			continue;
+		
+		if (element[property] === undefined)
+			this.addProperty(element, property, object_tree[property]);
+		else
+			element[property] = object_tree[property];
+	}
+	
+	for (var i = 0; i < object_tree.children.length; ++i) {
+		this._createElementsTreeFromObjectTree(object_tree.children[i], element);
+	}
+}
+
+Engine.prototype.createElement = function (type, id, parent) {
+	console.log("create element: '" + id + "' with type '" + type + "'");
+	
+	// TODO namespace window??
+	var element = new window[type];
+	element.setId(id);
+	element.setParent(parent);
+	
+	return element;
+}
+
+Engine.prototype.addProperty = function (element, property, value) {
+	if (element === undefined || property === undefined)
+		return;
+	
+	var _value = value;
+	var _this = this;
+	var _property = property;
+	var _element = element;
+	
+	console.log("add property '" + property + "' to '" + element.id + "' with value '" + value + "'");
+	
+	// call custom value setter for the initial value
+	if (window[_element.type].prototype.setProperty !== undefined)
+		window[_element.type].prototype.setProperty.call(_element, _property, _value);
+	
+	Object.defineProperty(_element, _property, {
+		get: function() { return _value; },
+		set: function(val) {
+			if (_value == val)
+				return;
+			_value = val;
+			
+			// call custom value setter
+			if (window[_element.type].prototype.setProperty !== undefined)
+				window[_element.type].prototype.setProperty.call(_element, _property, _value);
+			
+// 			_this._notifyPropertyChange(_element, _property);
+			console.log("set property " + _property + " to value " + _value);
+		}
+	});
 }

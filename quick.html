@@ -3,16 +3,18 @@
 		<title> QuickJS </title>
 
 		<script type="text/javascript" src="quick.js"></script>
-<!-- 		<script type="text/javascript" src="jml_types.js"></script> -->
+		<script type="text/javascript" src="quick_dom.js"></script>
 
 		<script type="text/javascript">
 
 		function onload () {
-			var tokens = QuickJS.tokenizer.parse(document.getElementById("jml").value);
+			var tokens = QuickJS.tokenizer.parse(document.getElementById("quickjs").value);
 			console.dir(tokens);
 			
-			var object_root = QuickJS.parser.parse(tokens);
-			console.dir(object_root);
+			var object_tree = QuickJS.parser.parse(tokens);
+			console.dir(object_tree);
+			
+			QuickJS.engine.createElements(object_tree, document.getElementById("quickjsroot"));
 		}
 
         </script>
@@ -23,7 +25,7 @@
 
     <a href="JavaScript: onload();">Compile</a><br/>
 
-	<textarea id="jml" rows=20 cols=155>
+	<textarea id="quickjs" rows=20 cols=155>
 Item {
     id: button;
     width: 73;
@@ -44,8 +46,7 @@ Item {
 	</textarea>
 	<br/>
 	
-	<div id="textareajmlroot" style="-webkit-user-select: none;" onselectstart="return false;">
-	</div>
+	<div id="quickjsroot" style="position: absolute; visibility: visible; -webkit-user-select: none;" onselectstart="return false;"></div>
 		
 	</body>
 </html>
