@@ -329,20 +329,29 @@ Engine.prototype.createElements = function (object_tree, root_element) {
 		return;
 	}
 	
-	// create bare elements with only the type, id and parent/child relationship
-	for (var i = 0; i < object_tree.children.length; ++i) {
-		this._createElementsTreeFromObjectTree(object_tree.children[i], root_element);
+	if (root_element.children === undefined)
+		root_element.children = [];
+	
+	if (object_tree.type === "root") {
+		for (var i = 0; i < object_tree.children.length; ++i) {
+			root_element.children[root_element.children.length] = this._createElementsTreeFromObjectTree(object_tree.children[i], root_element);
+		}
+	} else {
+		this._createElementsTreeFromObjectTree(object_tree, root_element);
 	}
 }
 
 Engine.prototype._createElementsTreeFromObjectTree = function (object_tree, parent) {
-	// TODO use actual uuids 
+	// TODO use actual uuids if no id is specified
 	if (object_tree.id === undefined)
 		object_tree.id = "Item"+Math.random();
 	
 // 	console.dir(object_tree);
 	
 	var element = this.createElement(object_tree.type, object_tree.id, parent);
+	
+	if (element.children === undefined)
+		element.children = [];
 	
 	for (var property in object_tree) {
 		if (!object_tree.hasOwnProperty(property))
@@ -357,7 +366,42 @@ Engine.prototype._createElementsTreeFromObjectTree = function (object_tree, pare
 	}
 	
 	for (var i = 0; i < object_tree.children.length; ++i) {
-		this._createElementsTreeFromObjectTree(object_tree.children[i], element);
+		element.children[element.children.length] = this._createElementsTreeFromObjectTree(object_tree.children[i], element);
+	}
+	
+	return element;
+}
+
+Engine.prototype._evalValuesFromElementTree = function (element) {
+	if (element === undefined)
+		return;
+	
+	console.log("eval inital values for element '" + element.id + "'");
+	
+	this._evalInitialValuesAndDetectPotentialBindings(element);
+	
+	// eval initial value assigned
+	for (var i = 0; i < element.children.length; ++i) {
+		this._evalValuesFromElementTree(element.children[i]);
+	}
+}
+
+Engine.prototype._evalInitialValuesAndDetectPotentialBindings = function (element) {
+	for (var property in element) {
+		if (!element.hasOwnProperty(property))
+			continue;
+		if (property === "id" || property === "parent" || property === "children" || property === "type")
+			continue;
+		
+		console.log("eval for property: '" + property + "'");
+		
+		try {
+			var func = eval("(function() { " + element[property] + "})");
+			var value = func.call(element);
+			element[property] = value;
+		} catch (e) {
+			console.log("cannot eval expression '" + element[property] + "' maybe a binding");
+		}
 	}
 }
 

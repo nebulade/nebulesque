@@ -14,7 +14,11 @@
 			var object_tree = QuickJS.parser.parse(tokens);
 			console.dir(object_tree);
 			
-			QuickJS.engine.createElements(object_tree, document.getElementById("quickjsroot"));
+			var root_element = new window["Item"]();
+			root_element.setId("root");
+			root_element.setParent(document.getElementById("quickjsroot"));
+			
+			QuickJS.engine.createElements(object_tree, root_element);
 		}
 
         </script>
@@ -33,9 +37,10 @@ Item {
     x: 900;
     y: 50;
     onclick: "console.log('click')";
-    border-width: 0
-    source: ($ma.changed || !$ma.changed) ? $ma.pressed ? "url(button2.png)" : $ma.containsMouse ? "url(button3.png)" : "url(button1.png)" : ""
-    source: "url(button1.png)"
+    border-width: 0;
+    source: ($ma.changed || !$ma.changed) ? $ma.pressed ? "url(button2.png)" : $ma.containsMouse ? "url(button3.png)" : "url(button1.png)" : "";
+    source: "url(button1.png)";
+    color: black;
 
     MouseArea {
         id: ma;
