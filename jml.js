@@ -20,7 +20,7 @@ function Utils () {}
 
 /* 
  * check if character is actual an alphanumeric one
- */
+*/
 Utils.prototype.isAlphaNumeric = function (c) {
 	return ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'));
 }
@@ -307,7 +307,7 @@ Compiler.prototype.compile = function (content, root) {
 	
 	root.style.visibility = "hidden";
 	
-	var elements = [];
+// 	var elements = [];
 	var element = undefined;
 	var parent = {"elem": root};
 	var property = "";
@@ -326,22 +326,23 @@ Compiler.prototype.compile = function (content, root) {
 				continue;
 			} else {
 // 				console.log("create type " + token["DATA"]);
-				element = new window[token["DATA"]] ();
+// 				element = new window[token["DATA"]] ();
+				element = {};
 				element.type = token["DATA"];
-				element.setParent(parent);
+				element.parent = parent;
 				element.children = [];
 				parent.children[parent.children.length] = element;
 			}
 		}
 		
 		if (token["TOKEN"] === "SCOPE_START") {
-			elements.push(element);
+// 			elements.push(element);
 			element.parent = parent;
 			parent = element;
 		}
 		
 		if (token["TOKEN"] === "SCOPE_END") {
-			element = elements.pop();
+// 			element = elements.pop();
 			parent = element.parent;
 		}
 		
@@ -353,36 +354,40 @@ Compiler.prototype.compile = function (content, root) {
 					i += 1;
 					continue;
 				} else {
-					this._compileError("no property to assign value or function found");
+					this._compileError("no property to assign value");
 				}
 			} else {
 				// TODO make sure id is a proper one
-				if (property === "id") {
-					var id = token["DATA"];
-					if (this._elements[id])
-						this._compileError("error id " + id + " already used.", token["LINE"]); 
-					this._elements[id] = element;
-					if (window[element.type].prototype.setId)
-						window[element.type].prototype.setId.call(element, id);
-					element.id = id;
-				} else {
-					var value = "";
-					
-					// TODO only if we dont find a binding, we need to eval the expression here
-					//      otherwise we evaluate it at the end of the compilation
-					if (this._findAndAddBinding(token["DATA"], element, property) === false) {
-						try {
-							value = eval(token["DATA"]);
-						} catch (e) {
-							this._compileError("error evaluating expression: " + token["DATA"], token["LINE"]);
-						}
-						
-						if (element[property] === undefined)
-							this.addProperty(element, property, value);
-						else
-							element[property] = value;
-					}
-				}
+				element[property] = token["DATA"];
+// 				if (property === "id") {
+// 					var id = token["DATA"];
+// 					if (this._elements[id])
+// 						this._compileError("error id " + id + " already used.", token["LINE"]); 
+// 					this._elements[id] = element;
+// 					if (window[element.type].prototype.setId)
+// 						window[element.type].prototype.setId.call(element, id);
+// 					element.id = id;
+// 				} else {
+// 					var value = "";
+// 					
+// 					this._evalExpression(token["DATA"], element, property);
+// 					
+// 					
+// 					TODO only if we dont find a binding, we need to eval the expression here
+// 					     otherwise we evaluate it at the end of the compilation
+// 					if (this._findAndAddBinding(token["DATA"], element, property) === false) {
+// 						try {
+// 							value = eval(token["DATA"]);
+// 						} catch (e) {
+// 							this._compileError("error evaluating expression: " + token["DATA"], token["LINE"]);
+// 						}
+// 						
+// 						if (element[property] === undefined)
+// 							this.addProperty(element, property, value);
+// 						else
+// 							element[property] = value;
+// 					}
+// 				}
 				property = undefined;
 			}
 		}
@@ -390,6 +395,9 @@ Compiler.prototype.compile = function (content, root) {
 		if (token["TOKEN"] === "FUNCTION")
 			this.addFunction(element.type, token["DATA"]);
 	}
+	
+	// create the actual elements such as the dom elements for example
+	this._createElements(parent);
 	
 	// attach all objects which are in scope of each element
 	this._attachObjectsInScope(parent);
@@ -408,7 +416,31 @@ Compiler.prototype.compile = function (content, root) {
 	root.style.visibility = "visible";
 }
 
-Compiler.prototype._attachObjectsInScope = function(element) {
+Compiler.prototype._createElements = function (element) {
+	for (var i = 0; i < element.children.length; ++i) {
+		var child = element.children[i];
+		var elem = new window[child.type]();
+		
+		for (var property in child) {
+			if (!child.hasOwnProperty(property))
+				continue;
+			if (property === "parent" || property === "children" || property === "type")
+				continue;
+			
+			if (elem[property] === undefined)
+				this.addProperty(elem, property, undefined);
+			
+			this._evalExpression(child[property], elem, property);
+		}
+		
+		this._createElements (child);
+		elem.setParent(element);
+		
+		console.dir(elem);
+	}
+}
+
+Compiler.prototype._attachObjectsInScope = function (element) {
 //	console.log("attach objects for: " + element.id);
 	
 	// add parents
@@ -446,7 +478,6 @@ Compiler.prototype.clear = function () {
 	this._elements = [];
 }
 
-
 /* 
  * Slot to handle a property change and evaluate the associated bindings
  *  TODO: there might be multiple bindings to the property
@@ -480,6 +511,20 @@ Compiler.prototype._syntaxError = function (message) {
  */
 Compiler.prototype._compileError = function (message, l) {
 	console.log("Compile error on line " + l + ": " + message);
+}
+
+Compiler.prototype._evalExpression = function (expr, elem, property) {
+	try {
+		var final_expr = expr.replace(/\$/g, "this.");
+		
+		console.log("expression to evaluate is: " + final_expr);
+		
+		var func = eval("(function() { " + final_expr + "})");
+		var value = func.call(elem);
+		elem[property] = value;
+	} catch (e) {
+		this._compileError("error evaluating expression: " + expr);
+	}
 }
 
 /* 

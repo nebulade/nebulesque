@@ -96,7 +96,7 @@ Text.prototype.setProperty = function (property, value) {
 function MouseArea () {
 	QuickJS.jml.addProperty(this, "containsMouse", false);
 	QuickJS.jml.addProperty(this, "pressed", false);
-    QuickJS.jml.addProperty(this, "changed", false);
+	QuickJS.jml.addProperty(this, "changed", false);
 	
 	var _this = this;
 	this.elem.onmouseover = function () { _this.containsMouse = true; _this.changed = !_this.changed; };

@@ -1,18 +1,18 @@
 <html>
 	<head>
-		<title> JS Fun </title>
+		<title> QuickJS </title>
 
-		<script type="text/javascript" src="animation.js"></script>
-		<script type="text/javascript" src="jml.js"></script>
-		<script type="text/javascript" src="jml_types.js"></script>
+		<script type="text/javascript" src="quick.js"></script>
+<!-- 		<script type="text/javascript" src="jml_types.js"></script> -->
 
 		<script type="text/javascript">
 
 		function onload () {
-			QuickJS.jml.clear();
+			var tokens = QuickJS.tokenizer.parse(document.getElementById("jml").value);
+			console.dir(tokens);
 			
-			QuickJS.jml.compile(document.getElementById("jml").value, document.getElementById("textareajmlroot"));
-			QuickJS.jml.dumpElements();
+			var object_root = QuickJS.parser.parse(tokens);
+			console.dir(object_root);
 		}
 
         </script>
