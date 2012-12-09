@@ -16,8 +16,8 @@
 
             scope.elem2 = new Element('elem2', document.getElementById('div2'), scope.elem);
 
-            scope.elem2.addProperty('left', 200);
-            scope.elem2.addProperty('top', 'elem1.left/2.0');
+            scope.elem2.addProperty('left', function() { return 200 });
+            scope.elem2.addProperty('top', function() { return this.elem1.left/2.0; });
 
             scope.elem.render();
         }

@@ -12,9 +12,9 @@ Quick.prototype.enterMagicBindingState = function () {
 Quick.prototype.exitMagicBindingState = function () {
     this.magicBindingState = false;
 
-    for (var getter in this.getterCalled) {
-        console.log("getter", this.getterCalled[getter], "called");
-    }
+    // for (var getter in this.getterCalled) {
+    //     console.log("getter", this.getterCalled[getter], "called");
+    // }
 
     return this.getterCalled;
 };
@@ -36,7 +36,7 @@ function Element (id, element, parent) {
 };
 
 Element.prototype.addChild = function (child) {
-    console.log("addChild", child.id, "to", this.id);
+    // console.log("addChild", child.id, "to", this.id);
     this.children[this.children.length] = child;
     console.log(this.children);
 
@@ -51,18 +51,18 @@ Element.prototype.addChild = function (child) {
 }
 
 Element.prototype.render = function () {
-    console.log("render()");
+    // console.log("render()");
 
     if (this.element) {
         for (p in this.properties) {
             var property = this.properties[p];
-            console.log("update property", property, this[property], this.element.style[property]);
+            // console.log("update property", property, this[property], this.element.style[property]);
             this.element.style[property] = this[property];
         }
     }
 
     for (var child in this.children) {
-        console.log("render child", this.children[child]);
+        // console.log("render child", this.children[child]);
         this.children[child].render();
     }
 };
@@ -76,21 +76,26 @@ Element.prototype.addChanged = function (signal, callback) {
 };
 
 Element.prototype.addBinding = function (name, value) {
-    console.log("addBinding", name);
+    // console.log("addBinding", name);
 
     var that = this;
+    var hasBinding = false;
 
     quick.enterMagicBindingState();
-    this[name] = value();
+    var val = value.apply(this);
+    console.log("addBinding result", name, val);
     var getters = quick.exitMagicBindingState();
 
     for (var getter in getters) {
-        console.log("binding found", getters[getter]);
+        hasBinding = true;
+        // console.log("binding found", getters[getter]);
         var tmp = getters[getter];
         tmp.element.addChanged(tmp.property, function() {
-            that[name] = value();
+            that[name] = value.apply(that);
         });
     }
+
+    return hasBinding;
 };
 
 Element.prototype.addProperty = function (name, value) {
@@ -102,19 +107,18 @@ Element.prototype.addProperty = function (name, value) {
 
     Object.defineProperty(this, name, {
         get: function() {
-            console.log("getter: ", that.id, name);
+            // console.log("getter: ", that.id, name);
             if (quick.magicBindingState) {
-                console.log("######")
                 quick.getterCalled[that.id + '.' + name] = { element: that, property: name };
             }
 
             if (typeof valueStore === 'function')
-                return valueStore();
+                return valueStore.apply(that);
             else
                 return valueStore;
         },
         set: function(val) {
-            console.log("setter: ", that.id, name, val);
+            // console.log("setter: ", that.id, name, val);
             if (valueStore === val)
                 return;
 
@@ -125,15 +129,26 @@ Element.prototype.addProperty = function (name, value) {
         }
     });
 
-    // initial set
-    this.addBinding(name, function() { return eval("(function() { return value; }).apply(scope.elem1)"); });
+    // initial set and binding discovery
+    if (typeof value === 'function') {
+        if (this.addBinding(name, value)) {
+            console.log("addProperty:", this.id, name, "binding found, so add function pointer");
+            this[name] = value;
+        } else {
+            console.log("addProperty:", this.id, name, "no binding, so add as simple value");
+            this[name] = value.apply(this);
+        }
+    } else {
+        console.log("addProperty:", this.id, name, "simple value passed in");
+        this[name] = value;
+    }
 };
 
 Element.prototype.emit = function (signal) {
     if (signal in this.connections) {
-        console.log("signal has connections", signal);
+        // console.log("signal has connections", signal);
         for (var slot in this.connections[signal]) {
-            console.log("### execute slot");
+            // console.log("### execute slot");
             this.connections[signal][slot]();
         }
     }
