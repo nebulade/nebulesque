@@ -2,6 +2,7 @@
     <head>
         <title> QuickJS </title>
 
+        <script type="text/javascript" src="quick_dom.js"></script>
         <script type="text/javascript" src="quick.js"></script>
 
         <script type="text/javascript">
@@ -11,13 +12,20 @@
         function init () {
             scope.elem = new Element('elem');
 
-            scope.elem1 = new Element('elem1', document.getElementById('div1'), scope.elem);
+            scope.elem1 = new Element('elem1', scope.elem);
             scope.elem1.addProperty('left', 100);
+            scope.elem1.addProperty('width', 100);
+            scope.elem1.addProperty('height', 100);
+            scope.elem1.addProperty('background-color', '#00ffff');
 
-            scope.elem2 = new Element('elem2', document.getElementById('div2'), scope.elem);
+            scope.elem2 = new Element('elem2', scope.elem);
 
             scope.elem2.addProperty('left', function() { return 200 });
             scope.elem2.addProperty('top', function() { return this.elem1.left/2.0; });
+            scope.elem2.addProperty('opacity', function() { return this.elem1.left/1200; });
+            scope.elem2.addProperty('width', 100);
+            scope.elem2.addProperty('height', 100);
+            scope.elem2.addProperty('background-color', '#00ff00');
 
             scope.elem.render();
         }
@@ -31,10 +39,6 @@
     </head>
 
     <body onload="init();" onclick="advance();">
-
-        <div id="div1" style="left: 0; top: 100; position: absolute; width: 100; height: 100; background-color: #00ff00;"></div>
-        <div id="div2" style="left: 0; top: 250; position: absolute; width: 100; height: 100; background-color: #00ffff;"></div>
-
     </body>
 </html>
 

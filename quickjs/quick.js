@@ -2,6 +2,23 @@
 function Quick() {
     this.magicBindingState = false;
     this.getterCalled = [];
+
+    var renderer;
+    try {
+        renderer = new QuickRendererDOM();
+    } catch (e) {
+        console.log("Cannot create DOM renderer")    ;
+    }
+
+    if (renderer) {
+        this.createElement = renderer.createElement;
+        this.addElement = renderer.addElement;
+        this.renderElement = renderer.renderElement;
+    } else {
+        this.createElement = function() {};
+        this.addElement = function() {};
+        this.renderElement = function() {};
+    }
 };
 
 Quick.prototype.enterMagicBindingState = function () {
@@ -11,19 +28,15 @@ Quick.prototype.enterMagicBindingState = function () {
 
 Quick.prototype.exitMagicBindingState = function () {
     this.magicBindingState = false;
-
-    // for (var getter in this.getterCalled) {
-    //     console.log("getter", this.getterCalled[getter], "called");
-    // }
-
     return this.getterCalled;
 };
 
+// create main singleton object
 var quick = new Quick();
 
-function Element (id, element, parent) {
+function Element (id, parent) {
     this.id = id;
-    this.element = element;
+    this.element = quick.createElement('item');
     this.parent = parent;
 
     this.properties = [];
@@ -33,6 +46,8 @@ function Element (id, element, parent) {
     if (this.parent) {
         this.parent.addChild(this);
     }
+
+    quick.addElement(this, parent);
 };
 
 Element.prototype.addChild = function (child) {
@@ -53,13 +68,7 @@ Element.prototype.addChild = function (child) {
 Element.prototype.render = function () {
     // console.log("render()");
 
-    if (this.element) {
-        for (p in this.properties) {
-            var property = this.properties[p];
-            // console.log("update property", property, this[property], this.element.style[property]);
-            this.element.style[property] = this[property];
-        }
-    }
+    quick.renderElement(this);
 
     for (var child in this.children) {
         // console.log("render child", this.children[child]);
