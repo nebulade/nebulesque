@@ -9,7 +9,7 @@
 
         var scope = {};
         var move_right = true;
-        var step = 15;
+        var step = 5;
 
         // animation frame shim
         window.requestAnimFrame = (function () {
@@ -59,10 +59,22 @@
             scope.elem2.addProperty('background-color', '#00ff00');
 
             scope.elem1 = new Element('elem1', scope.elem);
-            scope.elem1.addProperty('left', 100);
+            scope.elem1.addProperty('left', function () { return 100; });
             scope.elem1.addProperty('width', function () { return this.elem2.width/2.0; });
             scope.elem1.addProperty('height', 100);
             scope.elem1.addProperty('background-color', '#00ffff');
+
+            scope.elem3 = new Element('elem3', scope.elem);
+            scope.elem3.addProperty('width', 100);
+            scope.elem3.addProperty('height', 30);
+            scope.elem3.addProperty('text', function () { return this.elem2.width > 150 ? 'foo' : 'bar'; });
+
+            scope.elem4 = new Element('elem4', scope.elem1);
+            scope.elem4.addProperty('width', function () { return this.parent.width; });
+            scope.elem4.addProperty('height', 30);
+            scope.elem4.addProperty('background-color', '#0000ff');
+            scope.elem4.addProperty('text', function () { return this.parent.width > 150 ? 'foo' : 'bar'; });
+
 
             scope.elem.initializeBindings();
 
