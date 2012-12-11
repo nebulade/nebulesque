@@ -362,17 +362,17 @@ Compiler.prototype.compile = function (content, root) {
 // 				if (property === "id") {
 // 					var id = token["DATA"];
 						this._compileError("error id " + id + " already used.", token["LINE"]);
-// 						this._compileError("error id " + id + " already used.", token["LINE"]); 
+// 						this._compileError("error id " + id + " already used.", token["LINE"]);
 // 					this._elements[id] = element;
 // 					if (window[element.type].prototype.setId)
 // 						window[element.type].prototype.setId.call(element, id);
 // 					element.id = id;
 // 				} else {
 
-// 					
+//
 // 					this._evalExpression(token["DATA"], element, property);
-// 					
-// 					
+//
+//
 // 					TODO only if we dont find a binding, we need to eval the expression here
 // 					     otherwise we evaluate it at the end of the compilation
 // 					if (this._findAndAddBinding(token["DATA"], element, property) === false) {
@@ -398,7 +398,7 @@ Compiler.prototype.compile = function (content, root) {
 
 	// create the actual elements such as the dom elements for example
 	this._createElements(parent);
-	
+
 	// attach all objects which are in scope of each element
 	this._attachObjectsInScope(parent);
 
@@ -420,22 +420,22 @@ Compiler.prototype._createElements = function (element) {
 	for (var i = 0; i < element.children.length; ++i) {
 		var child = element.children[i];
 		var elem = new window[child.type]();
-		
+
 		for (var property in child) {
 			if (!child.hasOwnProperty(property))
 				continue;
 			if (property === "parent" || property === "children" || property === "type")
 				continue;
-			
+
 			if (elem[property] === undefined)
 				this.addProperty(elem, property, undefined);
-			
+
 			this._evalExpression(child[property], elem, property);
 		}
-		
+
 		this._createElements (child);
 		elem.setParent(element);
-		
+
 		console.dir(elem);
 	}
 }
@@ -516,9 +516,9 @@ Compiler.prototype._compileError = function (message, l) {
 Compiler.prototype._evalExpression = function (expr, elem, property) {
 	try {
 		var final_expr = expr.replace(/\$/g, "this.");
-		
+
 		console.log("expression to evaluate is: " + final_expr);
-		
+
 		var func = eval("(function() { " + final_expr + "})");
 		var value = func.call(elem);
 		elem[property] = value;

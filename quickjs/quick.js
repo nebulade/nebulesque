@@ -2,7 +2,9 @@
 function Quick() {
     this.magicBindingState = false;
     this.getterCalled = [];
+    this.toplevelElements = [];
 
+    // try to create a renderer backend, currently on DOM supported
     var renderer;
     try {
         renderer = new QuickRendererDOM();
@@ -10,6 +12,7 @@ function Quick() {
         console.log("Cannot create DOM renderer")    ;
     }
 
+    // if we have a renderer, setup hooks for elements
     if (renderer) {
         this.createElement = renderer.createElement;
         this.addElement = renderer.addElement;
@@ -21,18 +24,33 @@ function Quick() {
     }
 };
 
+// begin binding detection
 Quick.prototype.enterMagicBindingState = function () {
     this.getterCalled = [];
     this.magicBindingState = true;
 };
 
+// end binding detection
 Quick.prototype.exitMagicBindingState = function () {
     this.magicBindingState = false;
     return this.getterCalled;
 };
 
+// make sure we get a handle of toplevel elements
+// non toplevel elements are tracked by parent/child
+Quick.prototype.addTopLevelElement = function (elem) {
+    this.toplevelElements[elem.id] = elem;
+};
+
+// getter for toplevel elements by id
+Quick.prototype.getTopLevelElement = function (id) {
+    return this.toplevelElements[id];
+};
+
 // create main singleton object
-var quick = new Quick();
+if (!quick) {
+    var quick = new Quick();
+}
 
 function Element (id, parent) {
     this.id = id;
@@ -45,6 +63,8 @@ function Element (id, parent) {
 
     if (this.parent) {
         this.parent.addChild(this);
+    } else {
+        quick.addTopLevelElement(this);
     }
 
     quick.addElement(this, parent);
@@ -97,7 +117,7 @@ Element.prototype.addBinding = function (name, value) {
 
     for (var getter in getters) {
         hasBinding = true;
-        // console.log("binding found", getters[getter]);
+        console.log("binding found", getters[getter]);
         var tmp = getters[getter];
         tmp.element.addChanged(tmp.property, function() {
             that[name] = value.apply(that);
@@ -112,7 +132,7 @@ Element.prototype.addProperty = function (name, value) {
     var valueStore;
 
     // register property
-    this.properties[this.properties.length] = name;
+    this.properties[this.properties.length] = { name: name, value: value };
 
     Object.defineProperty(this, name, {
         get: function() {
@@ -137,19 +157,34 @@ Element.prototype.addProperty = function (name, value) {
             that.emit(name);
         }
     });
+};
 
-    // initial set and binding discovery
-    if (typeof value === 'function') {
-        if (this.addBinding(name, value)) {
-            console.log("addProperty:", this.id, name, "binding found, so add function pointer");
-            this[name] = value;
+// initial set of all properties and binding evaluation
+// should only be called once
+Element.prototype.initializeBindings = function () {
+    for (var i in this.properties) {
+        var name = this. properties[i].name;
+        var value = this.properties[i].value;
+
+        console.log("Element.initializeBindings()", name, value);
+
+        // initial set and binding discovery
+        if (typeof value === 'function') {
+            if (this.addBinding(name, value)) {
+                // console.log("addProperty:", this.id, name, "binding found, so add function pointer");
+                this[name] = value;
+            } else {
+                // console.log("addProperty:", this.id, name, "no binding, so add as simple value");
+                this[name] = value.apply(this);
+            }
         } else {
-            console.log("addProperty:", this.id, name, "no binding, so add as simple value");
-            this[name] = value.apply(this);
+            // console.log("addProperty:", this.id, name, "simple value passed in");
+            this[name] = value;
         }
-    } else {
-        console.log("addProperty:", this.id, name, "simple value passed in");
-        this[name] = value;
+    }
+
+    for (var child in this.children) {
+        this.children[child].initializeBindings();
     }
 };
 

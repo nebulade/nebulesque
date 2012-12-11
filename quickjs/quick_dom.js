@@ -30,7 +30,7 @@ QuickRendererDOM.prototype.addElement = function (element, parent) {
 QuickRendererDOM.prototype.renderElement = function (element) {
     if (element.element) {
         for (p in element.properties) {
-            var property = element.properties[p];
+            var property = element.properties[p].name;
             // console.log("update property", property, element[property], element.element.style[property]);
             element.element.style[property] = element[property];
         }
