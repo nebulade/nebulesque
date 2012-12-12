@@ -1,0 +1,41 @@
+<html>
+    <head>
+        <title> QuickJS </title>
+
+        <script type="text/javascript" src="quick_tokenizer.js"></script>
+        <script type="text/javascript" src="quick_compiler.js"></script>
+        <script type="text/javascript" src="quick_dom.js"></script>
+        <script type="text/javascript" src="quick.js"></script>
+
+        <script type="text/javascript">
+
+        function init () {
+            var textarea = window.document.getElementById("jml");
+
+            var tokenizer = new Tokenizer();
+            var tokens = tokenizer.parse(textarea.value);
+            tokenizer.dumpTokens();
+
+            var compiler = new Compiler();
+            compiler.compile(tokens);
+        }
+
+        </script>
+    </head>
+
+    <body onload="init();">
+
+        <textarea id="jml" cols="80" rows="20">
+Element {
+    id: elem
+    width: 100;
+    height: 100;
+    left: 200;
+    top: 50;
+    background-color: "#ffff00";
+}
+        </textarea>
+
+    </body>
+</html>
+

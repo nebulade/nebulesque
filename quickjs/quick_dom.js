@@ -1,5 +1,13 @@
+// Copyright (c) 2012 Johannes Zellner webmaster@nebulon.de - All Rights Reserved
 // DOM renderer
 
+"use strict";
+
+/*
+ **************************************************
+ * DOM renderer
+ **************************************************
+ */
 function QuickRendererDOM () {
 
 };
@@ -29,7 +37,7 @@ QuickRendererDOM.prototype.addElement = function (element, parent) {
 
 QuickRendererDOM.prototype.renderElement = function (element) {
     if (element.element) {
-        for (p in element.properties) {
+        for (var p in element.properties) {
             var name = element.properties[p].name;
             // console.log("update property", property, element[property], element.element.style[property]);
             if (name === 'text') {

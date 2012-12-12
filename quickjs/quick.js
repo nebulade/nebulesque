@@ -1,4 +1,16 @@
+// Copyright (c) 2012 Johannes Zellner webmaster@nebulon.de - All Rights Reserved
 
+"use strict";
+
+/*
+ **************************************************
+ * Singleton engine
+ **************************************************
+ *
+ * Handles mainly toplevel elements and detects bindings.
+ * This should contain as less as possible!
+ *
+ */
 function Quick() {
     this.magicBindingState = false;
     this.getterCalled = [];
@@ -52,6 +64,17 @@ if (!quick) {
     var quick = new Quick();
 }
 
+
+/*
+ **************************************************
+ * Basic Element
+ **************************************************
+ *
+ * The main element, which handles its connections
+ * and properties. It also calls into the renderer
+ * by using render hooks.
+ *
+ */
 function Element (id, parent) {
     this.id = id;
     this.element = quick.createElement('item');
