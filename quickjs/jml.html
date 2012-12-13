@@ -9,7 +9,7 @@
 
         <script type="text/javascript">
 
-        function init () {
+        function compile () {
             var textarea = window.document.getElementById("jml");
 
             var tokenizer = new Tokenizer();
@@ -17,15 +17,19 @@
             tokenizer.dumpTokens();
 
             var compiler = new Compiler();
-            compiler.compile(tokens);
+            var output = compiler.render(tokens);
+
+            console.log(output);
+
+            eval(output);
         }
 
         </script>
     </head>
 
-    <body onload="init();">
+    <body onload="">
 
-        <textarea id="jml" cols="80" rows="20">
+<textarea id="jml" cols="80" rows="20">
 Element {
     id: elem
     width: 100;
@@ -34,7 +38,9 @@ Element {
     top: 50;
     background-color: "#ffff00";
 }
-        </textarea>
+</textarea>
+
+        <input type="button" value="compile" onclick="compile()"/>
 
     </body>
 </html>
