@@ -16,7 +16,7 @@
             var tokens = tokenizer.parse(textarea.value);
             tokenizer.dumpTokens();
 
-            var compiler = new Compiler();
+            var compiler = Quick.Compiler;
             var output = compiler.render(tokens);
 
             console.log(output);
