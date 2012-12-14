@@ -17,6 +17,28 @@ Quick.Compiler = (function () {
     var output;
     var index;
 
+    var errorCodes = {
+        GENERIC:            0,
+        UNKNOWN_ELEMENT:    1,
+        NO_PROPERTY:        2
+    };
+
+    compiler.errorCodes = errorCodes;
+
+    var errorMessages = [];
+    errorMessages[errorCodes.UNKNOWN_ELEMENT] = "cannot create element";
+    errorMessages[errorCodes.NO_PROPERTY] =     "no property to assing expression";
+    errorMessages[errorCodes.GENERIC] =         "generic error";
+
+    function error (code, token) {
+        var ret = {};
+        ret.code = code;
+        ret.message = "Compile error: " + errorMessages[code];
+        ret.line = token ? token["LINE"] : -1;
+
+        return ret;
+    }
+
     function addIndentation (additional) {
         var indentLevel = index + (additional ? additional : 0);
 
@@ -64,13 +86,17 @@ Quick.Compiler = (function () {
     /*
      * Take all tokens and compile it to real elements with properties and bindings
      */
-    compiler.render = function (tokens) {
+    compiler.render = function (tokens, callback) {
         var property;
         var token_length = tokens.length;
         var tokens = tokens;
 
         output = "";          // render output, is Javascript which needs to be evaled or sourced
         index = 0;            // index used for tracking the current element variable
+
+        if (typeof callback !== "function") {
+            return;
+        }
 
         renderBegin();
 
@@ -109,7 +135,8 @@ Quick.Compiler = (function () {
                         i += 1;
                         continue;
                     } else {
-                        compileError("no property to assign value");
+                        callback(error(errorCodes.NO_PROPERTY, token), null);
+                        return;
                     }
                 } else {
                     console.log("right-hand-side expression found for property", property, token["DATA"]);
@@ -121,7 +148,7 @@ Quick.Compiler = (function () {
 
         renderEnd();
 
-        return output;
+        callback(null, output);
     }
 
     return compiler;

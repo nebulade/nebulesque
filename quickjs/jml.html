@@ -17,11 +17,14 @@
             tokenizer.dumpTokens();
 
             var compiler = Quick.Compiler;
-            var output = compiler.render(tokens);
-
-            console.log(output);
-
-            eval(output);
+            compiler.render(tokens, function (error, result) {
+                if (error) {
+                    console.log(error);
+                } else {
+                    console.log(result);
+                    eval(result);
+                }
+            });
         }
 
         </script>
