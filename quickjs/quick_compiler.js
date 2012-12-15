@@ -16,6 +16,8 @@ Quick.Compiler = (function () {
     var compiler = {};
     var output;
     var index;
+    var currentHelperElement;
+    var toplevelHelperElement;
 
     var errorCodes = {
         GENERIC:            0,
@@ -53,17 +55,18 @@ Quick.Compiler = (function () {
 
     function renderEnd () {
         addIndentation();
-        // FIXME this should call initBindings only on the toplevel element
-        output += "elem" + (index + 1) + ".initializeBindings();\n"
-        output += "elem" + (index + 1) + ".render();\n"
+        output += toplevelHelperElement.id + ".initializeBindings();\n"
+        addIndentation();
+        output += toplevelHelperElement.id + ".render();\n"
         output += "}());\n";
     };
 
     function renderElement (name, id) {
         addIndentation();
 
-        output += "var elem" + index + " = new " + name + "(";
+        output += "var " + currentHelperElement.id + " = new " + currentHelperElement.type + "(";
         output += id ? "\"" + id + "\"" : "";
+        output += currentHelperElement.parent ? ", " + currentHelperElement.parent.id : "";
         output += ");\n";
     };
 
@@ -74,14 +77,34 @@ Quick.Compiler = (function () {
         }
 
         addIndentation();
-        output += "elem" + index;
+        output += currentHelperElement.id;
         output += ".addProperty(\"" + property + "\", ";
-        output += "function () { \n";
+        output += "function () {\n";
         addIndentation(1);
-        output += "return " + value + ";\n";
+        output += "return (" + value + ");\n";
         addIndentation();
         output += "});\n"
     };
+
+    function HelperElement (type, parent) {
+        this.parent = parent;
+        this.type = type;
+
+        function generateId () {
+            var ret = [];
+            var length = 5;
+            var radix = 62;
+            var characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
+
+            for (var i = 0; i < length; i++) {
+                ret[i] = characters[0 | Math.random()*radix];
+            }
+
+            return ret.join('');
+        };
+
+        this.id = (parent ? parent.id : "") + "ELEM" + generateId();
+    }
 
     /*
      * Take all tokens and compile it to real elements with properties and bindings
@@ -90,9 +113,12 @@ Quick.Compiler = (function () {
         var property;
         var token_length = tokens.length;
         var tokens = tokens;
+        var elementType = undefined;
 
         output = "";          // render output, is Javascript which needs to be evaled or sourced
-        index = 0;            // index used for tracking the current element variable
+        index = 0;            // index used for tracking the indentation
+        currentHelperElement = undefined;
+        toplevelHelperElement = undefined;
 
         if (typeof callback !== "function") {
             return;
@@ -100,29 +126,56 @@ Quick.Compiler = (function () {
 
         renderBegin();
 
+        ++index;
+
         for (var i = 0; i < token_length; i += 1) {
             var token = tokens[i];
 
             if (token["TOKEN"] === "ELEMENT") {
                 console.log("create type " + token["DATA"]);
-                var tmpId;
-
-                // FIXME stupid and unsave id search
-                for (var j = i; j < token_length; ++j) {
-                    var tmpToken = tokens[j];
-                    if (tmpToken["TOKEN"] === "EXPRESSION" && tmpToken["DATA"] === "id") {
-                        tmpId = tokens[j+2]["DATA"];
-                    }
-                }
-                ++index;
-                renderElement(token["DATA"], tmpId);
+                elementType = token["DATA"];
             }
 
             if (token["TOKEN"] === "SCOPE_START") {
                 console.log("start element description");
+
+                // only if elementType was found previously
+                if (elementType) {
+                    var tmpId;
+
+                    // FIXME stupid and unsave id search
+                    for (var j = i; j < token_length; ++j) {
+                        var tmpToken = tokens[j];
+                        if (tmpToken["TOKEN"] === "EXPRESSION" && tmpToken["DATA"] === "id") {
+                            tmpId = tokens[j+2]["DATA"];
+                            break;
+                        }
+                    }
+
+                    ++index;
+                    if (currentHelperElement) {
+                        var tmpElem = currentHelperElement;
+                        currentHelperElement = new HelperElement(elementType, tmpElem);
+                    } else {
+                        // found toplevel element
+                        currentHelperElement = new HelperElement(elementType);
+                    }
+
+                    // preserve the toplevel element for init steps
+                    if (!toplevelHelperElement) {
+                        toplevelHelperElement = currentHelperElement;
+                    }
+
+                    elementType = undefined;
+
+                    renderElement(token["DATA"], tmpId);
+                }
             }
             if (token["TOKEN"] === "SCOPE_END") {
                 console.log("end element description");
+                if (currentHelperElement) {
+                    currentHelperElement = currentHelperElement.parent;
+                }
                 --index;
             }
 

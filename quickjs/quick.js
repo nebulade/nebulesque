@@ -92,6 +92,7 @@ function Element (id, parent) {
     this.children = [];
 
     if (this.parent) {
+        this[this.parent.id] = this.parent;
         this.parent.addChild(this);
     } else {
         Quick.Engine.addTopLevelElement(this);
@@ -102,17 +103,18 @@ function Element (id, parent) {
 
 Element.prototype.addChild = function (child) {
     // console.log("addChild", child.id, "to", this.id);
-    this.children[this.children.length] = child;
-    console.log(this.children);
-
-    // adds child id to the namespace
-    this[child.id] = child;
 
     // add child to all children scope and vice versa
     for (var i in this.children) {
         this.children[i][child.id] = child;
         child[this.children[i].id] = this.children[i];
     }
+
+    // adds child id to the namespace
+    this[child.id] = child;
+
+    this.children[this.children.length] = child;
+    console.log(this.children);
 }
 
 Element.prototype.render = function () {
