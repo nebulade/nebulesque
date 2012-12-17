@@ -7,140 +7,145 @@
  * Tokenizer
  **************************************************
  */
-function Tokenizer () {}
-
-/*
- * Parse the input string and create tokens
- */
-Tokenizer.prototype.parse = function (input) {
-    this._exp = input;
-    this._i = -1;
-    this._line = 1;
-    this._tokens = [];
-    this._c = undefined;//this._exp[this._i];
-    this._bindings = [];
-    this._colonOnLine = false;
-    this._comment = false;
-
-    while (this._advance()) {
-        if (this._comment && this._c !== '\n')
-            continue;
-
-        // check for one line comments
-        if (this._c === '/' && this._exp[this._i+1] === '/') {
-            this._comment = true;
-            continue;
-        }
-
-        if (this._c === '\n') {
-            this._comment = false;
-            this._colonOnLine = false;
-            ++this._line;
-            continue;
-        }
-
-        // check for element name
-        if (this._c >= 'A' && this._c <= 'Z') {
-            this._addToken("ELEMENT", this._parseElementName());
-            continue;
-        }
-
-        if ((this._c >= 'a' && this._c <= 'z') || (this._c >= '0' && this._c <= '9') || this._c === '"' || this._c === '\'' || this._c === '(') {
-            this._addToken("EXPRESSION", this._parseExpression());
-            continue;
-        }
-
-        if (this._c === '{') {
-            this._addToken("SCOPE_START");
-            continue;
-        }
-
-        if (this._c === '}') {
-            this._addToken("SCOPE_END");
-            continue;
-        }
-
-        if (this._c === ':') {
-            this._colonOnLine = true;
-            this._addToken("COLON");
-            continue;
-        }
-
-        if (this._c === ';') {
-            this._colonOnLine = false;
-            this._addToken("SEMICOLON");
-            continue;
-        }
-    }
-
-    return this._tokens;
+if (!Quick) {
+    var Quick = {};
 }
 
-/*
- * add a found token to the token table
- */
-Tokenizer.prototype._addToken = function (type, data) {
-    this._tokens.push( {"TOKEN" : type, "DATA" : data, "LINE" : this._line} );
-}
+if (!Quick.Tokenizer) {
+    Quick.Tokenizer = (function () {
+        var c, i, line, tokens, bindings, exp, colonOnLine, comment;
+        var ret = {};
 
-/*
- * extract an element name
- */
-Tokenizer.prototype._parseElementName = function () {
-    var token = "";
 
-    while (this._c) {
-        if ((this._c >= 'A' && this._c <= 'Z') || (this._c >= 'a' && this._c <= 'z'))
-            token += this._c;
-        else
-            break;
-
-        this._advance();
-    }
-
-    return token;
-}
-
-/*
- * extract an expression, can be a property definition, function or right side expression after :
- */
-Tokenizer.prototype._parseExpression = function () {
-    var expression = "";
-
-    while (this._c) {
-        if (this._c === '\n' || this._c === ';') {
-            this._i -= 1;
-            break;
+        // add a found token to the token table
+        function addToken (type, data) {
+            tokens.push( {"TOKEN" : type, "DATA" : data, "LINE" : line} );
         }
 
-        // only break if this is the first colon in that line
-        if (!this._colonOnLine && this._c === ':') {
-            this._i -= 1;
-            break;
+        // extract an element name
+        function parseElementName () {
+            var token = "";
+
+            while (c) {
+                if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+                    token += c;
+                else
+                    break;
+
+                advance();
+            }
+
+            return token;
         }
 
-        // ignore whitespace
-        if ((this._c !== '\t' && this._c !== ' ') || expression === "function")
-            expression += this._c;
+        // extract an expression, can be a property definition, function or right side expression after :
+        function parseExpression () {
+            var expression = "";
 
-        this._advance();
-    }
+            while (c) {
+                if (c === '\n' || c === ';') {
+                    i -= 1;
+                    break;
+                }
 
-    return expression;
-}
+                // only break if this is the first colon in that line
+                if (!colonOnLine && c === ':') {
+                    i -= 1;
+                    break;
+                }
 
-/*
- * Convenience function to advance the current tokenizer character
- */
-Tokenizer.prototype._advance = function () {
-    this._c = this._exp[++this._i];
-    return (this._c);
-}
+                // ignore whitespace
+                if ((c !== '\t' && c !== ' ') || expression === "function")
+                    expression += c;
 
-/*
- * Print all found tokens on the console
- */
-Tokenizer.prototype.dumpTokens = function () {
-    for (var i = 0; i < this._tokens.length; ++i)
-        console.log("TOKEN: " + this._tokens[i]["TOKEN"] + " " + (this._tokens[i]["DATA"] ? this._tokens[i]["DATA"] : ""));
+                advance();
+            }
+
+            return expression;
+        }
+
+        // Convenience function to advance the current tokenizer character
+        function advance () {
+            c = exp[++i];
+            return (c);
+        }
+
+        /*
+         * Parse the input string and create tokens
+         */
+        ret.parse = function (input) {
+            exp = input;
+            i = -1;
+            line = 1;
+            tokens = [];
+            c = undefined;//exp[i];
+            bindings = [];
+            colonOnLine = false;
+            comment = false;
+
+            while (advance()) {
+                if (comment && c !== '\n')
+                    continue;
+
+                // check for one line comments
+                if (c === '/' && exp[i+1] === '/') {
+                    comment = true;
+                    continue;
+                }
+
+                if (c === '\n') {
+                    comment = false;
+                    colonOnLine = false;
+                    ++line;
+                    continue;
+                }
+
+                // check for element name
+                if (c >= 'A' && c <= 'Z') {
+                    addToken("ELEMENT", parseElementName());
+                    continue;
+                }
+
+                if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c === '"' || c === '\'' || c === '(') {
+                    addToken("EXPRESSION", parseExpression());
+                    continue;
+                }
+
+                if (c === '{') {
+                    addToken("SCOPE_START");
+                    continue;
+                }
+
+                if (c === '}') {
+                    addToken("SCOPE_END");
+                    continue;
+                }
+
+                if (c === ':') {
+                    colonOnLine = true;
+                    addToken("COLON");
+                    continue;
+                }
+
+                if (c === ';') {
+                    colonOnLine = false;
+                    addToken("SEMICOLON");
+                    continue;
+                }
+            }
+
+            return tokens;
+        }
+
+
+        /*
+         * Print all found tokens on the console
+         */
+        ret.dumpTokens = function () {
+            for (var i = 0; i < tokens.length; ++i)
+                console.log("TOKEN: " + tokens[i]["TOKEN"] + " " + (tokens[i]["DATA"] ? tokens[i]["DATA"] : ""));
+        }
+
+        return ret;
+    }());
 }

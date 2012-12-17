@@ -12,9 +12,8 @@
         function compile () {
             var textarea = window.document.getElementById("jml");
 
-            var tokenizer = new Tokenizer();
-            var tokens = tokenizer.parse(textarea.value);
-            tokenizer.dumpTokens();
+            var tokens = Quick.Tokenizer.parse(textarea.value);
+            Quick.Tokenizer.dumpTokens();
 
             var compiler = Quick.Compiler;
             compiler.render(tokens, function (error, result) {
