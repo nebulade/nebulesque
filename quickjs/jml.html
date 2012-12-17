@@ -21,7 +21,7 @@
                 if (error) {
                     console.log(error);
                 } else {
-                    console.log(result);
+                    document.getElementById("output").innerHTML = result;
                     eval(result);
                 }
             });
@@ -54,6 +54,10 @@ Element {
 </textarea>
 
         <input type="button" value="compile" onclick="compile()"/>
+
+<pre id="output">
+
+</pre>
 
     </body>
 </html>

@@ -102,17 +102,21 @@ function Element (id, parent) {
 
 Element.prototype.addChild = function (child) {
     // console.log("addChild", child.id, "to", this.id);
-    this.children[this.children.length] = child;
-    console.log(this.children);
 
     // adds child id to the namespace
     this[child.id] = child;
 
-    // add child to all children scope and vice versa
+    // adds the parents id to the child
+    child[this.id] = this;
+
+    // add child to siblings scope and vice versa
     for (var i in this.children) {
         this.children[i][child.id] = child;
         child[this.children[i].id] = this.children[i];
     }
+
+    // add newly added child to internal children array
+    this.children[this.children.length] = child;
 }
 
 Element.prototype.render = function () {
