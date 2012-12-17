@@ -44,11 +44,29 @@ Element {
     Element {
         id: child
         width: this.elem.width * 2.0;
-        height: 100;
+        height: this.child2.subchild.height;
         left: 400;
         top: 100;
         background-color: "#ff00ff";
         text: "QuickJS";
+    }
+
+    Element {
+        id: child2
+        width: this.child.width / 3.;
+        height: 100;
+        left: 10;
+        top: 10;
+        background-color: "#00ffff";
+
+        Element {
+            id: subchild
+            width: 30;
+            height: 30;
+            left: 10;
+            top: 10;
+            background-color: "#3300ff";
+        }
     }
 }
 </textarea>
