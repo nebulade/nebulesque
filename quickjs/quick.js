@@ -19,55 +19,55 @@
 // create main singleton object
 if (!Quick.Engine) {
     Quick.Engine = (function () {
-        function Engine() {
-            this.magicBindingState = false;
-            this.getterCalled = [];
-            this.toplevelElements = [];
+        var ret = {};
+        var getterCalled = {};
+        var toplevelElements = {};
 
-            // try to create a renderer backend, currently on DOM supported
-            var renderer;
-            try {
-                renderer = new QuickRendererDOM();
-            } catch (e) {
-                console.log("Cannot create DOM renderer")    ;
-            }
+        ret.magicBindingState = false;
 
-            // if we have a renderer, setup hooks for elements
-            if (renderer) {
-                this.createElement = renderer.createElement;
-                this.addElement = renderer.addElement;
-                this.renderElement = renderer.renderElement;
-            } else {
-                this.createElement = function() {};
-                this.addElement = function() {};
-                this.renderElement = function() {};
-            }
-        };
+        // try to create a renderer backend, currently on DOM supported
+        try {
+            var renderer = new QuickRendererDOM();
+            ret.createElement = renderer.createElement;
+            ret.addElement = renderer.addElement;
+            ret.renderElement = renderer.renderElement;
+        } catch (e) {
+            console.log("Cannot create DOM renderer")    ;
+            ret.createElement = function () {};
+            ret.addElement = function () {};
+            ret.renderElement = function () {};
+        }
 
         // begin binding detection
-        Engine.prototype.enterMagicBindingState = function () {
-            this.getterCalled = [];
-            this.magicBindingState = true;
+        ret.enterMagicBindingState = function () {
+            console.log("enterMagicBindingState")
+            getterCalled = {};
+            ret.magicBindingState = true;
         };
 
         // end binding detection
-        Engine.prototype.exitMagicBindingState = function () {
-            this.magicBindingState = false;
-            return this.getterCalled;
+        ret.exitMagicBindingState = function () {
+            console.log("exitMagicBindingState\n\n")
+            ret.magicBindingState = false;
+            return getterCalled;
+        };
+
+        ret.addCalledGetter = function (element, property) {
+            getterCalled[element.id + "." + property] = { element: element, property: property };
         };
 
         // make sure we get a handle of toplevel elements
         // non toplevel elements are tracked by parent/child
-        Engine.prototype.addTopLevelElement = function (elem) {
-            this.toplevelElements[elem.id] = elem;
+        ret.addTopLevelElement = function (elem) {
+            toplevelElements[elem.id] = elem;
         };
 
         // getter for toplevel elements by id
-        Engine.prototype.getTopLevelElement = function (id) {
-            return this.toplevelElements[id];
+        ret.getTopLevelElement = function (id) {
+            return toplevelElements[id];
         };
 
-        return new Engine();
+        return ret;
     }());
 }
 
@@ -92,7 +92,6 @@ function Element (id, parent) {
     this.children = [];
 
     if (this.parent) {
-        this[this.parent.id] = this.parent;
         this.parent.addChild(this);
     } else {
         Quick.Engine.addTopLevelElement(this);
@@ -103,18 +102,17 @@ function Element (id, parent) {
 
 Element.prototype.addChild = function (child) {
     // console.log("addChild", child.id, "to", this.id);
+    this.children[this.children.length] = child;
+    console.log(this.children);
+
+    // adds child id to the namespace
+    this[child.id] = child;
 
     // add child to all children scope and vice versa
     for (var i in this.children) {
         this.children[i][child.id] = child;
         child[this.children[i].id] = this.children[i];
     }
-
-    // adds child id to the namespace
-    this[child.id] = child;
-
-    this.children[this.children.length] = child;
-    console.log(this.children);
 }
 
 Element.prototype.render = function () {
@@ -170,7 +168,7 @@ Element.prototype.addProperty = function (name, value) {
         get: function() {
             // console.log("getter: ", that.id, name);
             if (Quick.Engine.magicBindingState) {
-                Quick.Engine.getterCalled[that.id + '.' + name] = { element: that, property: name };
+                Quick.Engine.addCalledGetter(that, name);
             }
 
             if (typeof valueStore === 'function')
