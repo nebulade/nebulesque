@@ -144,6 +144,8 @@ Element.prototype.addBinding = function (name, value) {
     var that = this;
     var hasBinding = false;
 
+    // FIXME does not catch changing conditions in expression
+    //  x: mouseArea.clicked ? a.y() : b:z();
     Quick.Engine.enterMagicBindingState();
     var val = value.apply(this);
     console.log("addBinding result", name, val);

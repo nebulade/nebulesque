@@ -81,7 +81,11 @@ Quick.Compiler = (function () {
         output += ".addProperty(\"" + property + "\", ";
         output += "function () {\n";
         addIndentation(1);
-        output += "return (" + value + ");\n";
+        if (String(value).indexOf("return") !== -1) {
+            output += value + ";\n";
+        } else {
+            output += "return " + value + ";\n";
+        }
         addIndentation();
         output += "});\n"
     };

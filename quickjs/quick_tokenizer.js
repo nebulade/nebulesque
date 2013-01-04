@@ -55,7 +55,7 @@ if (!Quick.Tokenizer) {
                 }
 
                 // ignore whitespace
-                if ((c !== '\t' && c !== ' ') || expression === "function")
+                // if ((c !== '\t' && c !== ' ') || expression === "function")
                     expression += c;
 
                 advance();
