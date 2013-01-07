@@ -84,7 +84,7 @@ if (!Quick.Engine) {
  */
 function Element (id, parent) {
     this.id = id;
-    this.element = Quick.Engine.createElement('item');
+    this.element = Quick.Engine.createElement('item', this);
     this.parent = parent;
 
     this.properties = [];
@@ -163,6 +163,27 @@ Element.prototype.addBinding = function (name, value) {
     return hasBinding;
 };
 
+Element.prototype.addEventHandler = function (event, handler) {
+    var that = this;
+    var signal = event;
+
+    if (signal === "" || typeof handler !== 'function') {
+        return;
+    }
+
+    if (signal.indexOf('on') === 0) {
+        signal = signal.slice(2);
+    }
+
+    var callback = function () {
+        handler.apply(that);
+    }
+
+    console.log("add signal handler for " + signal);
+
+    this.addChanged(signal, callback);
+}
+
 Element.prototype.addProperty = function (name, value) {
     var that = this;
     var valueStore;
@@ -225,10 +246,11 @@ Element.prototype.initializeBindings = function () {
 };
 
 Element.prototype.emit = function (signal) {
+    console.log("emit signal " + signal);
     if (signal in this.connections) {
-        // console.log("signal has connections", signal);
+        console.log("signal has connections", signal);
         for (var slot in this.connections[signal]) {
-            // console.log("### execute slot");
+            console.log("### execute slot");
             this.connections[signal][slot]();
         }
     }

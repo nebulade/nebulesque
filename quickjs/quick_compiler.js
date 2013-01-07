@@ -70,9 +70,23 @@ Quick.Compiler = (function () {
         output += ");\n";
     };
 
+    function renderEventHandler (property, value) {
+        addIndentation();
+        output += currentHelperElement.id;
+        output += ".addEventHandler(\"" + property + "\", ";
+        output += "function () {\n";
+        addIndentation();
+        output += value + ";\n";
+        addIndentation();
+        output += "});\n";
+    };
+
     function renderProperty (property, value) {
         // special case for ID
         if (property === "id") {
+            return;
+        } else if (property.indexOf('on') === 0) {
+            renderEventHandler(property, value);
             return;
         }
 

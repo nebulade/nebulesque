@@ -12,7 +12,7 @@ function QuickRendererDOM () {
 
 };
 
-QuickRendererDOM.prototype.createElement = function (typeHint) {
+QuickRendererDOM.prototype.createElement = function (typeHint, object) {
     var elem;
 
     if (typeHint === 'object') {
@@ -23,6 +23,10 @@ QuickRendererDOM.prototype.createElement = function (typeHint) {
     } else if (typeHint === 'input') {
         elem = document.createElement('input');
     }
+
+    elem.onclick = function () { object.emit('click'); };
+    elem.onmouseover = function () { object.emit('mouseover'); };
+    elem.onmouseout = function () { object.emit('mouseout'); };
 
     return elem;
 };
@@ -39,7 +43,7 @@ QuickRendererDOM.prototype.renderElement = function (element) {
     if (element.element) {
         for (var p in element.properties) {
             var name = element.properties[p].name;
-            // console.log("update property", property, element[property], element.element.style[property]);
+
             if (name === 'text') {
                 element.element.innerHTML = element[name];
             } else {
